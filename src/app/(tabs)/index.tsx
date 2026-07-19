@@ -1,10 +1,9 @@
 import { useRouter } from "expo-router";
 import { useCallback, useState } from "react";
-import { FlatList, StyleSheet } from "react-native";
+import { ActivityIndicator, FlatList, StyleSheet, View } from "react-native";
 
 import { SearchInput } from "@/components/search/SearchInput";
 import { SearchResultItem } from "@/components/search/SearchResultItem";
-import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { ErrorState } from "@/components/ui/ErrorState";
@@ -15,7 +14,8 @@ import { FundSearchResult } from "@/types/fund";
 
 export default function SearchScreen() {
   const [query, setQuery] = useState("");
-  const { results, isLoading, error, retry } = useSearchFunds(query);
+  const { results, isLoading, isLoadingMore, error, hasMore, loadMore, retry } =
+    useSearchFunds(query);
   const router = useRouter();
 
   const handleResultPress = useCallback(
@@ -37,30 +37,31 @@ export default function SearchScreen() {
     [],
   );
 
+  const renderFooter = useCallback(() => {
+    if (!isLoadingMore) return null;
+    return (
+      <View style={styles.footer}>
+        <ActivityIndicator size="small" />
+      </View>
+    );
+  }, [isLoadingMore]);
+
+  const handleEndReached = useCallback(() => {
+    if (hasMore && !isLoadingMore) {
+      loadMore();
+    }
+  }, [hasMore, isLoadingMore, loadMore]);
+
   const renderContent = () => {
-    // Idle state: query too short
-    if (query.length < 3) {
-      return (
-        <ThemedView style={styles.centered}>
-          <ThemedText themeColor="textSecondary" style={styles.hint}>
-            Enter at least 3 characters to search
-          </ThemedText>
-        </ThemedView>
-      );
+    if (isLoading && results.length === 0) {
+      return <LoadingIndicator message="Loading funds..." />;
     }
 
-    // Loading state
-    if (isLoading) {
-      return <LoadingIndicator message="Searching funds..." />;
-    }
-
-    // Error state
-    if (error) {
+    if (error && results.length === 0) {
       return <ErrorState message={error} onRetry={retry} />;
     }
 
-    // Empty state: query valid but no results
-    if (results.length === 0) {
+    if (results.length === 0 && query.length >= 3) {
       return (
         <EmptyState
           message="No funds found"
@@ -69,7 +70,6 @@ export default function SearchScreen() {
       );
     }
 
-    // Results state
     return (
       <FlatList
         data={results}
@@ -77,6 +77,9 @@ export default function SearchScreen() {
         keyExtractor={keyExtractor}
         contentContainerStyle={styles.listContent}
         keyboardDismissMode="on-drag"
+        onEndReached={handleEndReached}
+        onEndReachedThreshold={0.5}
+        ListFooterComponent={renderFooter}
       />
     );
   };
@@ -93,17 +96,11 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  centered: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    padding: Spacing.four,
-  },
-  hint: {
-    fontSize: 14,
-    textAlign: "center",
-  },
   listContent: {
     paddingBottom: Spacing.four,
+  },
+  footer: {
+    paddingVertical: Spacing.three,
+    alignItems: "center",
   },
 });
