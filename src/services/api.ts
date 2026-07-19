@@ -9,15 +9,15 @@ export class APIError extends Error {
     message: string,
     public statusCode?: number,
     public isTimeout?: boolean,
-    public isNetworkError?: boolean
+    public isNetworkError?: boolean,
   ) {
     super(message);
-    this.name = 'APIError';
+    this.name = "APIError";
   }
 }
 
 const DEFAULT_CONFIG: APIConfig = {
-  baseURL: 'https://api.mfapi.in/mf',
+  baseURL: "https://api.mfapi.in/mf",
   timeout: 10000, // 10 seconds
   retries: 2,
 };
@@ -54,7 +54,7 @@ function delay(ms: number): Promise<void> {
  */
 export async function fetchWithRetry<T>(
   url: string,
-  config?: Partial<APIConfig>
+  config?: Partial<APIConfig>,
 ): Promise<T> {
   const { timeout, retries } = { ...DEFAULT_CONFIG, ...config };
 
@@ -65,11 +65,19 @@ export async function fetchWithRetry<T>(
     const timeoutId = setTimeout(() => controller.abort(), timeout);
 
     try {
+      if (attempt === 0) {
+        console.log("[API] →", url);
+      }
       const response = await fetch(url, { signal: controller.signal });
       clearTimeout(timeoutId);
 
       if (response.ok) {
         const data: T = await response.json();
+        console.log("[API] ←", response.status, url);
+        console.log(
+          "[API] Response:",
+          JSON.stringify(data, null, 2).slice(0, 2000),
+        );
         return data;
       }
 
@@ -79,7 +87,7 @@ export async function fetchWithRetry<T>(
           `Client error: ${response.status} ${response.statusText}`,
           response.status,
           false,
-          false
+          false,
         );
       }
 
@@ -89,11 +97,12 @@ export async function fetchWithRetry<T>(
           `Server error: ${response.status} ${response.statusText}`,
           response.status,
           false,
-          false
+          false,
         );
 
         if (attempt < retries) {
-          const backoffDelay = BASE_DELAY * Math.pow(BACKOFF_MULTIPLIER, attempt);
+          const backoffDelay =
+            BASE_DELAY * Math.pow(BACKOFF_MULTIPLIER, attempt);
           await delay(backoffDelay);
           continue;
         }
@@ -106,35 +115,39 @@ export async function fetchWithRetry<T>(
         `Unexpected response: ${response.status} ${response.statusText}`,
         response.status,
         false,
-        false
+        false,
       );
     } catch (error) {
       clearTimeout(timeoutId);
 
       // Already an APIError (from 4xx or wrapped above) — rethrow non-retryable ones
       if (error instanceof APIError) {
-        if (!error.isTimeout && !error.isNetworkError && !isRetryableStatus(error.statusCode ?? 0)) {
+        if (
+          !error.isTimeout &&
+          !error.isNetworkError &&
+          !isRetryableStatus(error.statusCode ?? 0)
+        ) {
           throw error;
         }
         lastError = error;
-      } else if (error instanceof DOMException && error.name === 'AbortError') {
+      } else if (error instanceof DOMException && error.name === "AbortError") {
         // Timeout via AbortController
-        lastError = new APIError('Request timed out', undefined, true, false);
+        lastError = new APIError("Request timed out", undefined, true, false);
       } else if (error instanceof TypeError) {
         // Network error (fetch throws TypeError for network failures)
         lastError = new APIError(
           `Network error: ${error.message}`,
           undefined,
           false,
-          true
+          true,
         );
       } else {
         // Unknown error — wrap and don't retry
         throw new APIError(
-          error instanceof Error ? error.message : 'An unknown error occurred',
+          error instanceof Error ? error.message : "An unknown error occurred",
           undefined,
           false,
-          false
+          false,
         );
       }
 
@@ -147,13 +160,15 @@ export async function fetchWithRetry<T>(
 
       // Exhausted retries
       if (lastError) {
+        console.log("[API] ✗", url, lastError.message);
         throw lastError;
       }
     }
   }
 
   // This should never be reached, but satisfies TypeScript
-  throw lastError ?? new APIError('Request failed after all retries');
+  console.log("[API] ✗", url, lastError?.message || "unknown error");
+  throw lastError ?? new APIError("Request failed after all retries");
 }
 
 export { DEFAULT_CONFIG };

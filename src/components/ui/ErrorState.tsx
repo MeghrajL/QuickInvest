@@ -1,9 +1,9 @@
-import { Pressable, StyleSheet } from 'react-native';
+import { Pressable, StyleSheet } from "react-native";
 
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { Spacing } from '@/constants/theme';
-import { useTheme } from '@/hooks/use-theme';
+import { ThemedText } from "@/components/themed-text";
+import { ThemedView } from "@/components/themed-view";
+import { BorderRadius, Spacing } from "@/constants/theme";
+import { useTheme } from "@/hooks/use-theme";
 
 interface ErrorStateProps {
   message: string;
@@ -22,11 +22,12 @@ export function ErrorState({ message, onRetry }: ErrorStateProps) {
           onPress={onRetry}
           style={({ pressed }) => [
             styles.retryButton,
-            { backgroundColor: theme.backgroundElement },
-            pressed && { opacity: 0.7 },
+            { backgroundColor: theme.accent },
+            pressed && { opacity: 0.8 },
           ]}
           accessibilityRole="button"
-          accessibilityLabel="Retry">
+          accessibilityLabel="Retry"
+        >
           <ThemedText style={styles.retryText}>Retry</ThemedText>
         </Pressable>
       )}
@@ -37,26 +38,28 @@ export function ErrorState({ message, onRetry }: ErrorStateProps) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: Spacing.four,
+    justifyContent: "center",
+    alignItems: "center",
+    padding: Spacing.six,
   },
   icon: {
-    fontSize: 32,
-    marginBottom: Spacing.two,
-  },
-  message: {
-    fontSize: 16,
-    textAlign: 'center',
+    fontSize: 40,
     marginBottom: Spacing.four,
   },
+  message: {
+    fontSize: 15,
+    textAlign: "center",
+    marginBottom: Spacing.five,
+    lineHeight: 22,
+  },
   retryButton: {
-    paddingHorizontal: Spacing.four,
-    paddingVertical: Spacing.two,
-    borderRadius: 8,
+    paddingHorizontal: Spacing.six,
+    paddingVertical: Spacing.three,
+    borderRadius: BorderRadius.full,
   },
   retryText: {
-    fontSize: 16,
-    fontWeight: '600',
+    fontSize: 14,
+    fontWeight: "700",
+    color: "#0d0d12",
   },
 });

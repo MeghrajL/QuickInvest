@@ -1,8 +1,8 @@
-import { StyleSheet } from 'react-native';
+import { StyleSheet } from "react-native";
 
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { Spacing } from '@/constants/theme';
+import { ThemedText } from "@/components/themed-text";
+import { ThemedView } from "@/components/themed-view";
+import { Spacing } from "@/constants/theme";
 
 interface EmptyStateProps {
   message: string;
@@ -25,17 +25,19 @@ export function EmptyState({ message, suggestion }: EmptyStateProps) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: Spacing.four,
+    justifyContent: "center",
+    alignItems: "center",
+    padding: Spacing.six,
   },
   message: {
-    fontSize: 16,
-    textAlign: 'center',
-    marginBottom: Spacing.two,
+    fontSize: 17,
+    fontWeight: "600",
+    textAlign: "center",
+    marginBottom: Spacing.three,
   },
   suggestion: {
     fontSize: 14,
-    textAlign: 'center',
+    textAlign: "center",
+    lineHeight: 20,
   },
 });

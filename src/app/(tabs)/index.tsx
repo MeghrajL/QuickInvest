@@ -4,6 +4,7 @@ import { ActivityIndicator, FlatList, StyleSheet, View } from "react-native";
 
 import { SearchInput } from "@/components/search/SearchInput";
 import { SearchResultItem } from "@/components/search/SearchResultItem";
+import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { ErrorState } from "@/components/ui/ErrorState";
@@ -41,7 +42,7 @@ export default function SearchScreen() {
     if (!isLoadingMore) return null;
     return (
       <View style={styles.footer}>
-        <ActivityIndicator size="small" />
+        <ActivityIndicator size="small" color="#c9a96e" />
       </View>
     );
   }, [isLoadingMore]);
@@ -55,6 +56,10 @@ export default function SearchScreen() {
   const renderContent = () => {
     if (isLoading && results.length === 0) {
       return <LoadingIndicator message="Loading funds..." />;
+    }
+
+    if (isLoading && query.length >= 3) {
+      return <LoadingIndicator message="Searching..." />;
     }
 
     if (error && results.length === 0) {
@@ -80,6 +85,7 @@ export default function SearchScreen() {
         onEndReached={handleEndReached}
         onEndReachedThreshold={0.5}
         ListFooterComponent={renderFooter}
+        showsVerticalScrollIndicator={false}
       />
     );
   };
@@ -87,6 +93,11 @@ export default function SearchScreen() {
   return (
     <ThemedView style={styles.container}>
       <SearchInput value={query} onChangeText={setQuery} />
+      {query.length < 3 && results.length > 0 && (
+        <ThemedText style={styles.sectionTitle} themeColor="textSecondary">
+          All Schemes
+        </ThemedText>
+      )}
       {renderContent()}
     </ThemedView>
   );
@@ -96,11 +107,19 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
+  sectionTitle: {
+    fontSize: 13,
+    fontWeight: "600",
+    textTransform: "uppercase",
+    letterSpacing: 1,
+    marginHorizontal: Spacing.five,
+    marginBottom: Spacing.three,
+  },
   listContent: {
-    paddingBottom: Spacing.four,
+    paddingBottom: Spacing.six,
   },
   footer: {
-    paddingVertical: Spacing.three,
+    paddingVertical: Spacing.five,
     alignItems: "center",
   },
 });

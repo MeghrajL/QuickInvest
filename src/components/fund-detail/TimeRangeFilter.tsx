@@ -1,27 +1,30 @@
-import React from 'react';
-import { View, Pressable, StyleSheet } from 'react-native';
+import React from "react";
+import { Pressable, StyleSheet, View } from "react-native";
 
-import { TimeRange } from '@/types/fund';
-import { ThemedText } from '@/components/themed-text';
-import { useTheme } from '@/hooks/use-theme';
-import { Spacing } from '@/constants/theme';
+import { ThemedText } from "@/components/themed-text";
+import { BorderRadius, Spacing } from "@/constants/theme";
+import { useTheme } from "@/hooks/use-theme";
+import { TimeRange } from "@/types/fund";
 
 interface TimeRangeFilterProps {
   selectedRange: TimeRange;
   onRangeChange: (range: TimeRange) => void;
 }
 
-const RANGES: TimeRange[] = ['1M', '3M', '6M', '1Y', 'ALL'];
+const RANGES: TimeRange[] = ["1M", "3M", "6M", "1Y", "ALL"];
 
 const LABELS: Record<TimeRange, string> = {
-  '1M': '1M',
-  '3M': '3M',
-  '6M': '6M',
-  '1Y': '1Y',
-  'ALL': 'All',
+  "1M": "1M",
+  "3M": "3M",
+  "6M": "6M",
+  "1Y": "1Y",
+  ALL: "All",
 };
 
-function TimeRangeFilterInner({ selectedRange, onRangeChange }: TimeRangeFilterProps) {
+function TimeRangeFilterInner({
+  selectedRange,
+  onRangeChange,
+}: TimeRangeFilterProps) {
   const theme = useTheme();
 
   return (
@@ -35,7 +38,9 @@ function TimeRangeFilterInner({ selectedRange, onRangeChange }: TimeRangeFilterP
             onPress={() => onRangeChange(range)}
             style={[
               styles.pill,
-              { backgroundColor: isActive ? theme.backgroundSelected : theme.backgroundElement },
+              {
+                backgroundColor: isActive ? theme.accent : "transparent",
+              },
             ]}
             accessibilityRole="button"
             accessibilityState={{ selected: isActive }}
@@ -44,7 +49,7 @@ function TimeRangeFilterInner({ selectedRange, onRangeChange }: TimeRangeFilterP
             <ThemedText
               style={[
                 styles.pillText,
-                isActive && styles.pillTextActive,
+                { color: isActive ? "#0d0d12" : theme.textSecondary },
               ]}
             >
               {LABELS[range]}
@@ -58,22 +63,19 @@ function TimeRangeFilterInner({ selectedRange, onRangeChange }: TimeRangeFilterP
 
 const styles = StyleSheet.create({
   container: {
-    flexDirection: 'row',
-    paddingHorizontal: Spacing.three,
-    paddingVertical: Spacing.two,
+    flexDirection: "row",
+    paddingHorizontal: Spacing.four,
+    paddingVertical: Spacing.three,
     gap: Spacing.two,
   },
   pill: {
-    paddingHorizontal: Spacing.three,
-    paddingVertical: Spacing.one,
-    borderRadius: 16,
+    paddingHorizontal: Spacing.four,
+    paddingVertical: Spacing.two,
+    borderRadius: BorderRadius.full,
   },
   pillText: {
-    fontSize: 13,
-    fontWeight: '500',
-  },
-  pillTextActive: {
-    fontWeight: '700',
+    fontSize: 12,
+    fontWeight: "700",
   },
 });
 

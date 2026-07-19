@@ -1,33 +1,48 @@
-import React, { useCallback } from 'react';
-import { FlatList, View, StyleSheet } from 'react-native';
+import React, { useCallback } from "react";
+import { FlatList, StyleSheet, View } from "react-native";
 
-import { NAVEntry } from '@/types/fund';
-import { ThemedText } from '@/components/themed-text';
-import { useTheme } from '@/hooks/use-theme';
-import { Spacing } from '@/constants/theme';
-import { formatNAV } from '@/utils/format';
-import { parseNAVDate, formatDisplayDate } from '@/utils/date';
+import { ThemedText } from "@/components/themed-text";
+import { Spacing } from "@/constants/theme";
+import { useTheme } from "@/hooks/use-theme";
+import { NAVEntry } from "@/types/fund";
+import { formatDisplayDate, parseNAVDate } from "@/utils/date";
+import { formatNAV } from "@/utils/format";
 
 interface NAVHistoryListProps {
   data: NAVEntry[];
 }
 
-const ROW_HEIGHT = 44;
+const ROW_HEIGHT = 48;
 
 interface NAVRowProps {
   entry: NAVEntry;
   borderColor: string;
+  isLast: boolean;
 }
 
-const NAVRow = React.memo(function NAVRow({ entry, borderColor }: NAVRowProps) {
+const NAVRow = React.memo(function NAVRow({
+  entry,
+  borderColor,
+  isLast,
+}: NAVRowProps) {
   const date = parseNAVDate(entry.date);
   const formattedDate = formatDisplayDate(date);
   const navValue = parseFloat(entry.nav);
   const formattedNAV = `₹${formatNAV(navValue)}`;
 
   return (
-    <View style={[styles.row, { borderBottomColor: borderColor }]}>
-      <ThemedText style={styles.dateText}>{formattedDate}</ThemedText>
+    <View
+      style={[
+        styles.row,
+        !isLast && {
+          borderBottomColor: borderColor,
+          borderBottomWidth: StyleSheet.hairlineWidth,
+        },
+      ]}
+    >
+      <ThemedText style={styles.dateText} themeColor="textSecondary">
+        {formattedDate}
+      </ThemedText>
       <ThemedText style={styles.navText}>{formattedNAV}</ThemedText>
     </View>
   );
@@ -35,13 +50,17 @@ const NAVRow = React.memo(function NAVRow({ entry, borderColor }: NAVRowProps) {
 
 function NAVHistoryListInner({ data }: NAVHistoryListProps) {
   const theme = useTheme();
-  const borderColor = theme.backgroundElement;
+  const borderColor = theme.border;
 
   const renderItem = useCallback(
-    ({ item }: { item: NAVEntry }) => (
-      <NAVRow entry={item} borderColor={borderColor} />
+    ({ item, index }: { item: NAVEntry; index: number }) => (
+      <NAVRow
+        entry={item}
+        borderColor={borderColor}
+        isLast={index === data.length - 1}
+      />
     ),
-    [borderColor]
+    [borderColor, data.length],
   );
 
   const keyExtractor = useCallback((item: NAVEntry) => item.date, []);
@@ -52,7 +71,7 @@ function NAVHistoryListInner({ data }: NAVHistoryListProps) {
       offset: ROW_HEIGHT * index,
       index,
     }),
-    []
+    [],
   );
 
   return (
@@ -71,27 +90,27 @@ function NAVHistoryListInner({ data }: NAVHistoryListProps) {
 
 const styles = StyleSheet.create({
   container: {
-    paddingHorizontal: Spacing.three,
-    paddingTop: Spacing.three,
+    paddingHorizontal: Spacing.four,
   },
   sectionHeader: {
-    fontSize: 18,
-    fontWeight: '600',
-    marginBottom: Spacing.two,
+    fontSize: 16,
+    fontWeight: "700",
+    marginBottom: Spacing.four,
   },
   row: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     height: ROW_HEIGHT,
-    borderBottomWidth: StyleSheet.hairlineWidth,
+    paddingVertical: Spacing.three,
   },
   dateText: {
-    fontSize: 14,
+    fontSize: 13,
+    fontWeight: "500",
   },
   navText: {
     fontSize: 14,
-    fontWeight: '600',
+    fontWeight: "700",
   },
 });
 

@@ -10,7 +10,7 @@ import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
 import { ErrorState } from "@/components/ui/ErrorState";
 import { LoadingIndicator } from "@/components/ui/LoadingIndicator";
-import { Spacing } from "@/constants/theme";
+import { BorderRadius, Spacing } from "@/constants/theme";
 import { useFundDetail } from "@/hooks/use-fund-detail";
 import { useTheme } from "@/hooks/use-theme";
 import { useHoldingsStore } from "@/stores/holdings-store";
@@ -29,7 +29,7 @@ export default function FundDetailScreen() {
 
   const { fund, isLoading, error, retry } = useFundDetail(schemeCode);
 
-  const [selectedRange, setSelectedRange] = useState<TimeRange>("ALL");
+  const [selectedRange, setSelectedRange] = useState<TimeRange>("1Y");
   const [holdingFormVisible, setHoldingFormVisible] = useState(false);
 
   const isInWatchlist = useWatchlistStore((s) => s.isInWatchlist(schemeCode));
@@ -65,12 +65,11 @@ export default function FundDetailScreen() {
   }, [fund, selectedRange]);
 
   const historyData = useMemo(() => {
-    return filteredData.slice(0, 100);
+    return filteredData.slice(0, 50);
   }, [filteredData]);
 
   const earliestNAVDate = useMemo(() => {
     if (!fund || fund.data.length === 0) return undefined;
-    // Data is newest-first, so last element is the earliest date
     const lastEntry = fund.data[fund.data.length - 1];
     return parseNAVDate(lastEntry.date);
   }, [fund]);
@@ -90,30 +89,47 @@ export default function FundDetailScreen() {
   const latestEntry = fund.data[0];
   const latestNAV = latestEntry ? parseFloat(latestEntry.nav) : 0;
   const latestDate = latestEntry ? parseNAVDate(latestEntry.date) : new Date();
-  const showTimeRangeFilter = fund.data.length > 365;
 
   return (
     <ThemedView style={styles.container}>
-      <ScrollView contentContainerStyle={styles.scrollContent}>
-        {/* Header Section */}
-        <View style={styles.header}>
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* Hero Card - Fund Info */}
+        <View
+          style={[
+            styles.heroCard,
+            { backgroundColor: theme.backgroundElement },
+          ]}
+        >
+          <ThemedText style={styles.fundCategory} themeColor="textSecondary">
+            {fund.meta.scheme_category || fund.meta.scheme_type}
+          </ThemedText>
           <ThemedText style={styles.fundName}>
             {fund.meta.scheme_name}
           </ThemedText>
-          <ThemedText type="small" themeColor="textSecondary">
-            Scheme Code: {fund.meta.scheme_code}
+          <ThemedText style={styles.fundHouse} themeColor="textSecondary">
+            {fund.meta.fund_house}
           </ThemedText>
-          <View style={styles.navRow}>
-            <ThemedText style={styles.navValue}>
-              ₹{formatNAV(latestNAV)}
-            </ThemedText>
-            <ThemedText
-              type="small"
-              themeColor="textSecondary"
-              style={styles.navDate}
-            >
-              {formatDisplayDate(latestDate)}
-            </ThemedText>
+
+          <View style={styles.navContainer}>
+            <View>
+              <ThemedText style={styles.navLabel} themeColor="textSecondary">
+                Latest NAV
+              </ThemedText>
+              <ThemedText style={styles.navValue}>
+                ₹{formatNAV(latestNAV)}
+              </ThemedText>
+            </View>
+            <View style={styles.navDateContainer}>
+              <ThemedText style={styles.navLabel} themeColor="textSecondary">
+                As on
+              </ThemedText>
+              <ThemedText style={styles.navDateValue}>
+                {formatDisplayDate(latestDate)}
+              </ThemedText>
+            </View>
           </View>
         </View>
 
@@ -121,49 +137,73 @@ export default function FundDetailScreen() {
         <View style={styles.actionRow}>
           <Pressable
             onPress={handleWatchlistToggle}
-            style={[
+            style={({ pressed }) => [
               styles.actionButton,
               {
                 backgroundColor: isInWatchlist
-                  ? theme.backgroundSelected
+                  ? theme.accent
                   : theme.backgroundElement,
+                borderColor: isInWatchlist ? theme.accent : theme.border,
               },
+              pressed && { opacity: 0.8 },
             ]}
             accessibilityRole="button"
             accessibilityLabel={
               isInWatchlist ? "Remove from watchlist" : "Add to watchlist"
             }
           >
-            <ThemedText style={styles.actionButtonText}>
-              {isInWatchlist ? "In Watchlist" : "Add to Watchlist"}
+            <ThemedText
+              style={[
+                styles.actionButtonText,
+                isInWatchlist && { color: "#0d0d12" },
+              ]}
+            >
+              {isInWatchlist ? "★ Watchlisted" : "☆ Watchlist"}
             </ThemedText>
           </Pressable>
 
           <Pressable
             onPress={() => setHoldingFormVisible(true)}
-            style={[styles.actionButton, styles.addHoldingButton]}
+            style={({ pressed }) => [
+              styles.actionButton,
+              styles.addHoldingButton,
+              pressed && { opacity: 0.8 },
+            ]}
             accessibilityRole="button"
             accessibilityLabel="Add holding"
           >
             <ThemedText style={styles.addHoldingButtonText}>
-              Add Holding
+              + Add Holding
             </ThemedText>
           </Pressable>
         </View>
 
-        {/* Time Range Filter - only shown when > 365 entries */}
-        {showTimeRangeFilter && (
+        {/* Chart Section */}
+        <View
+          style={[
+            styles.chartSection,
+            { backgroundColor: theme.backgroundElement },
+          ]}
+        >
+          <View style={styles.chartHeader}>
+            <ThemedText style={styles.sectionTitle}>Performance</ThemedText>
+          </View>
           <TimeRangeFilter
             selectedRange={selectedRange}
             onRangeChange={setSelectedRange}
           />
-        )}
+          <NAVChart data={filteredData} maxPoints={100} />
+        </View>
 
-        {/* NAV Chart */}
-        <NAVChart data={filteredData} maxPoints={100} />
-
-        {/* NAV History List */}
-        <NAVHistoryList data={historyData} />
+        {/* NAV History */}
+        <View
+          style={[
+            styles.historySection,
+            { backgroundColor: theme.backgroundElement },
+          ]}
+        >
+          <NAVHistoryList data={historyData} />
+        </View>
       </ScrollView>
 
       {/* Holding Form Modal */}
@@ -183,54 +223,100 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   scrollContent: {
-    paddingBottom: Spacing.five,
+    paddingBottom: Spacing.eight,
   },
-  header: {
-    paddingHorizontal: Spacing.three,
-    paddingTop: Spacing.four,
-    paddingBottom: Spacing.two,
+  heroCard: {
+    marginHorizontal: Spacing.four,
+    marginTop: Spacing.four,
+    padding: Spacing.five,
+    borderRadius: BorderRadius.xl,
+  },
+  fundCategory: {
+    fontSize: 12,
+    fontWeight: "600",
+    textTransform: "uppercase",
+    letterSpacing: 1,
+    marginBottom: Spacing.two,
   },
   fundName: {
-    fontSize: 20,
+    fontSize: 18,
     fontWeight: "700",
+    lineHeight: 24,
+    marginBottom: Spacing.two,
+  },
+  fundHouse: {
+    fontSize: 13,
+    marginBottom: Spacing.five,
+  },
+  navContainer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "flex-end",
+  },
+  navLabel: {
+    fontSize: 11,
+    fontWeight: "600",
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
     marginBottom: Spacing.one,
   },
-  navRow: {
-    flexDirection: "row",
-    alignItems: "baseline",
-    marginTop: Spacing.two,
-    gap: Spacing.two,
-  },
   navValue: {
-    fontSize: 24,
-    fontWeight: "700",
+    fontSize: 28,
+    fontWeight: "800",
+    color: "#c9a96e",
   },
-  navDate: {
-    fontSize: 13,
+  navDateContainer: {
+    alignItems: "flex-end",
+  },
+  navDateValue: {
+    fontSize: 14,
+    fontWeight: "600",
   },
   actionRow: {
     flexDirection: "row",
-    paddingHorizontal: Spacing.three,
-    paddingVertical: Spacing.two,
-    gap: Spacing.two,
+    paddingHorizontal: Spacing.four,
+    paddingVertical: Spacing.four,
+    gap: Spacing.three,
   },
   actionButton: {
     flex: 1,
-    height: 40,
-    borderRadius: 8,
+    height: 44,
+    borderRadius: BorderRadius.full,
     justifyContent: "center",
     alignItems: "center",
+    borderWidth: 1,
   },
   actionButtonText: {
-    fontSize: 14,
-    fontWeight: "600",
+    fontSize: 13,
+    fontWeight: "700",
   },
   addHoldingButton: {
-    backgroundColor: "#3c87f7",
+    backgroundColor: "#c9a96e",
+    borderColor: "#c9a96e",
   },
   addHoldingButtonText: {
-    fontSize: 14,
-    fontWeight: "600",
-    color: "#ffffff",
+    fontSize: 13,
+    fontWeight: "700",
+    color: "#0d0d12",
+  },
+  chartSection: {
+    marginHorizontal: Spacing.four,
+    borderRadius: BorderRadius.xl,
+    paddingTop: Spacing.four,
+    paddingBottom: Spacing.three,
+    marginBottom: Spacing.four,
+  },
+  chartHeader: {
+    paddingHorizontal: Spacing.four,
+    marginBottom: Spacing.two,
+  },
+  sectionTitle: {
+    fontSize: 16,
+    fontWeight: "700",
+  },
+  historySection: {
+    marginHorizontal: Spacing.four,
+    borderRadius: BorderRadius.xl,
+    paddingVertical: Spacing.four,
   },
 });

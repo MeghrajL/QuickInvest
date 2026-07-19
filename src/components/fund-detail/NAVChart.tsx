@@ -1,11 +1,11 @@
-import React from 'react';
-import { View, StyleSheet, useWindowDimensions } from 'react-native';
-import { LineChart } from 'react-native-gifted-charts';
+import React from "react";
+import { StyleSheet, useWindowDimensions, View } from "react-native";
+import { LineChart } from "react-native-gifted-charts";
 
-import { NAVEntry } from '@/types/fund';
-import { downsampleNAVData } from '@/utils/chart';
-import { useTheme } from '@/hooks/use-theme';
-import { Spacing } from '@/constants/theme';
+import { Spacing } from "@/constants/theme";
+import { useTheme } from "@/hooks/use-theme";
+import { NAVEntry } from "@/types/fund";
+import { downsampleNAVData } from "@/utils/chart";
 
 interface NAVChartProps {
   data: NAVEntry[];
@@ -13,9 +13,12 @@ interface NAVChartProps {
 }
 
 const DEFAULT_MAX_POINTS = 80;
-const CHART_HEIGHT = 200;
+const CHART_HEIGHT = 180;
 
-function NAVChartInner({ data, maxPoints = DEFAULT_MAX_POINTS }: NAVChartProps) {
+function NAVChartInner({
+  data,
+  maxPoints = DEFAULT_MAX_POINTS,
+}: NAVChartProps) {
   const theme = useTheme();
   const { width: windowWidth } = useWindowDimensions();
 
@@ -23,19 +26,14 @@ function NAVChartInner({ data, maxPoints = DEFAULT_MAX_POINTS }: NAVChartProps) 
     return null;
   }
 
-  // Data from API is newest-first; reverse to get oldest-first (left = oldest, right = newest)
   const chronological = [...data].reverse();
-
-  // Downsample for chart performance
   const sampled = downsampleNAVData(chronological, maxPoints);
 
-  // Map to format expected by gifted-charts
   const chartData = sampled.map((entry) => ({
     value: parseFloat(entry.nav),
   }));
 
-  // Responsive width: full window width minus horizontal padding
-  const chartWidth = windowWidth - Spacing.three * 2;
+  const chartWidth = windowWidth - Spacing.four * 2 - Spacing.four * 2;
 
   return (
     <View style={styles.container}>
@@ -43,16 +41,22 @@ function NAVChartInner({ data, maxPoints = DEFAULT_MAX_POINTS }: NAVChartProps) 
         data={chartData}
         width={chartWidth}
         height={CHART_HEIGHT}
-        color={theme.text}
-        thickness={1.5}
+        color="#c9a96e"
+        thickness={2}
         hideDataPoints
-        yAxisTextStyle={{ color: theme.textSecondary, fontSize: 10 }}
-        yAxisColor={theme.backgroundSelected}
-        xAxisColor={theme.backgroundSelected}
+        startFillColor="rgba(201, 169, 110, 0.15)"
+        endFillColor="rgba(201, 169, 110, 0.01)"
+        startOpacity={0.3}
+        endOpacity={0}
+        areaChart
+        yAxisTextStyle={{ color: theme.textSecondary, fontSize: 9 }}
+        yAxisColor="transparent"
+        xAxisColor="transparent"
         hideRules
-        backgroundColor={theme.background}
+        backgroundColor="transparent"
         adjustToWidth
         disableScroll
+        curved
       />
     </View>
   );
@@ -60,8 +64,7 @@ function NAVChartInner({ data, maxPoints = DEFAULT_MAX_POINTS }: NAVChartProps) 
 
 const styles = StyleSheet.create({
   container: {
-    paddingHorizontal: Spacing.three,
-    paddingVertical: Spacing.two,
+    paddingHorizontal: Spacing.two,
   },
 });
 

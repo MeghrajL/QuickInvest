@@ -9,7 +9,7 @@ import {
 } from "react-native";
 
 import { ThemedText } from "@/components/themed-text";
-import { Spacing } from "@/constants/theme";
+import { BorderRadius, Spacing } from "@/constants/theme";
 import { useTheme } from "@/hooks/use-theme";
 import { validateHoldingForm } from "@/utils/validation";
 
@@ -48,10 +48,8 @@ function HoldingFormInner({
   }, [resetForm, onClose]);
 
   const handleSubmit = useCallback(() => {
-    // Parse the date from YYYY-MM-DD string
     const parsedDate = new Date(purchaseDate);
 
-    // Check if date string is valid format before running validation
     if (isNaN(parsedDate.getTime())) {
       setErrors((prev) => ({
         ...prev,
@@ -79,40 +77,38 @@ function HoldingFormInner({
     <Modal
       visible={visible}
       transparent
-      animationType="fade"
+      animationType="slide"
       onRequestClose={handleClose}
     >
       <Pressable style={styles.overlay} onPress={handleClose}>
         <Pressable
-          style={[styles.card, { backgroundColor: theme.background }]}
+          style={[styles.card, { backgroundColor: theme.backgroundElement }]}
           onPress={() => {}}
         >
-          <ThemedText type="smallBold" style={styles.title}>
-            Add Holding
-          </ThemedText>
+          {/* Handle bar */}
+          <View style={styles.handleBar} />
 
-          <ThemedText
-            type="small"
-            themeColor="textSecondary"
-            style={styles.fundName}
-          >
+          <ThemedText style={styles.title}>Add Holding</ThemedText>
+
+          <ThemedText style={styles.fundName} themeColor="textSecondary">
             {fundName}
           </ThemedText>
 
           {/* Units Input */}
           <View style={styles.fieldContainer}>
+            <ThemedText style={styles.fieldLabel} themeColor="textSecondary">
+              Units
+            </ThemedText>
             <TextInput
               style={[
                 styles.input,
                 {
-                  backgroundColor: theme.backgroundElement,
+                  backgroundColor: theme.backgroundSelected,
                   color: theme.text,
-                  borderColor: errors.units
-                    ? "#DC3545"
-                    : theme.backgroundElement,
+                  borderColor: errors.units ? "#f87171" : "transparent",
                 },
               ]}
-              placeholder="Number of units"
+              placeholder="e.g. 100.5"
               placeholderTextColor={theme.textSecondary}
               keyboardType="numeric"
               value={units}
@@ -131,15 +127,16 @@ function HoldingFormInner({
 
           {/* Purchase Date Input */}
           <View style={styles.fieldContainer}>
+            <ThemedText style={styles.fieldLabel} themeColor="textSecondary">
+              Purchase Date
+            </ThemedText>
             <TextInput
               style={[
                 styles.input,
                 {
-                  backgroundColor: theme.backgroundElement,
+                  backgroundColor: theme.backgroundSelected,
                   color: theme.text,
-                  borderColor: errors.purchaseDate
-                    ? "#DC3545"
-                    : theme.backgroundElement,
+                  borderColor: errors.purchaseDate ? "#f87171" : "transparent",
                 },
               ]}
               placeholder="YYYY-MM-DD"
@@ -163,10 +160,10 @@ function HoldingFormInner({
           {/* Buttons */}
           <View style={styles.buttonRow}>
             <Pressable
-              style={[
+              style={({ pressed }) => [
                 styles.button,
-                styles.cancelButton,
-                { backgroundColor: theme.backgroundElement },
+                { backgroundColor: theme.backgroundSelected },
+                pressed && { opacity: 0.7 },
               ]}
               onPress={handleClose}
               accessibilityRole="button"
@@ -176,10 +173,10 @@ function HoldingFormInner({
             </Pressable>
 
             <Pressable
-              style={[
+              style={({ pressed }) => [
                 styles.button,
                 styles.submitButton,
-                { opacity: isFormFilled ? 1 : 0.5 },
+                { opacity: isFormFilled ? (pressed ? 0.8 : 1) : 0.4 },
               ]}
               onPress={handleSubmit}
               disabled={!isFormFilled}
@@ -200,76 +197,81 @@ function HoldingFormInner({
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
-    justifyContent: "center",
-    alignItems: "center",
-    padding: Spacing.three,
+    backgroundColor: "rgba(0, 0, 0, 0.7)",
+    justifyContent: "flex-end",
   },
   card: {
     width: "100%",
-    maxWidth: 400,
-    borderRadius: 12,
-    padding: Spacing.four,
-    ...Platform.select({
-      ios: {
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.2,
-        shadowRadius: 8,
-      },
-      android: {
-        elevation: 8,
-      },
-      default: {},
-    }),
+    borderTopLeftRadius: BorderRadius.xl,
+    borderTopRightRadius: BorderRadius.xl,
+    paddingHorizontal: Spacing.five,
+    paddingBottom: Platform.OS === "ios" ? Spacing.eight : Spacing.six,
+    paddingTop: Spacing.three,
+  },
+  handleBar: {
+    width: 40,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: "rgba(255,255,255,0.2)",
+    alignSelf: "center",
+    marginBottom: Spacing.five,
   },
   title: {
-    fontSize: 18,
-    fontWeight: "700",
-    marginBottom: Spacing.one,
+    fontSize: 22,
+    fontWeight: "800",
+    marginBottom: Spacing.two,
   },
   fundName: {
-    marginBottom: Spacing.three,
+    fontSize: 13,
+    marginBottom: Spacing.five,
   },
   fieldContainer: {
-    marginBottom: Spacing.three,
+    marginBottom: Spacing.four,
+  },
+  fieldLabel: {
+    fontSize: 12,
+    fontWeight: "600",
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
+    marginBottom: Spacing.two,
   },
   input: {
-    height: 44,
-    borderRadius: 8,
-    paddingHorizontal: Spacing.three,
+    height: 50,
+    borderRadius: BorderRadius.md,
+    paddingHorizontal: Spacing.four,
     fontSize: 16,
-    borderWidth: 1,
+    fontWeight: "600",
+    borderWidth: 1.5,
   },
   errorText: {
-    color: "#DC3545",
+    color: "#f87171",
     fontSize: 12,
-    marginTop: Spacing.one,
+    fontWeight: "500",
+    marginTop: Spacing.two,
   },
   buttonRow: {
     flexDirection: "row",
-    gap: Spacing.two,
-    marginTop: Spacing.two,
+    gap: Spacing.three,
+    marginTop: Spacing.four,
   },
   button: {
     flex: 1,
-    height: 44,
-    borderRadius: 8,
+    height: 50,
+    borderRadius: BorderRadius.full,
     justifyContent: "center",
     alignItems: "center",
   },
-  cancelButton: {},
   cancelButtonText: {
     fontSize: 15,
-    fontWeight: "600",
+    fontWeight: "700",
   },
   submitButton: {
-    backgroundColor: "#3c87f7",
+    backgroundColor: "#c9a96e",
   },
   submitButtonText: {
     fontSize: 15,
-    fontWeight: "600",
-    color: "#ffffff",
+    fontWeight: "700",
+    color: "#0d0d12",
   },
 });
 
