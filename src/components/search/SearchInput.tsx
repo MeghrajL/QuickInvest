@@ -1,6 +1,6 @@
+import Ionicons from "@expo/vector-icons/Ionicons";
 import { Pressable, StyleSheet, TextInput, View } from "react-native";
 
-import { ThemedText } from "@/components/themed-text";
 import { BorderRadius, Spacing } from "@/constants/theme";
 import { useTheme } from "@/hooks/use-theme";
 
@@ -21,12 +21,18 @@ export function SearchInput({
     <View
       style={[
         styles.container,
-        { backgroundColor: theme.backgroundElement, borderColor: theme.border },
+        {
+          backgroundColor: theme.backgroundElement,
+          borderColor: value.length > 0 ? theme.accent : theme.border,
+        },
       ]}
     >
-      <ThemedText style={styles.icon} themeColor="textSecondary">
-        ⌕
-      </ThemedText>
+      <Ionicons
+        name="search"
+        size={18}
+        color={value.length > 0 ? theme.accent : theme.textSecondary}
+        style={styles.icon}
+      />
       <TextInput
         style={[styles.input, { color: theme.text }]}
         value={value}
@@ -42,14 +48,16 @@ export function SearchInput({
       {value.length > 0 && (
         <Pressable
           onPress={() => onChangeText("")}
-          style={styles.clearButton}
+          style={({ pressed }) => [
+            styles.clearButton,
+            { backgroundColor: theme.backgroundSelected },
+            pressed && { opacity: 0.7 },
+          ]}
           accessibilityLabel="Clear search"
           accessibilityRole="button"
           hitSlop={8}
         >
-          <ThemedText style={styles.clearText} themeColor="textSecondary">
-            ✕
-          </ThemedText>
+          <Ionicons name="close" size={14} color={theme.textSecondary} />
         </Pressable>
       )}
     </View>
@@ -60,31 +68,30 @@ const styles = StyleSheet.create({
   container: {
     flexDirection: "row",
     alignItems: "center",
-    borderRadius: BorderRadius.lg,
+    borderRadius: BorderRadius.full,
     paddingHorizontal: Spacing.four,
     paddingVertical: Spacing.three,
     marginHorizontal: Spacing.four,
-    marginTop: Spacing.four,
+    marginTop: Spacing.three,
     marginBottom: Spacing.three,
-    borderWidth: 1,
+    borderWidth: 1.5,
   },
   icon: {
-    fontSize: 18,
     marginRight: Spacing.three,
   },
   input: {
     flex: 1,
-    fontSize: 16,
-    lineHeight: 22,
+    fontSize: 15,
+    lineHeight: 20,
     padding: 0,
     fontWeight: "500",
   },
   clearButton: {
     marginLeft: Spacing.two,
-    padding: Spacing.two,
-  },
-  clearText: {
-    fontSize: 14,
-    fontWeight: "600",
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    justifyContent: "center",
+    alignItems: "center",
   },
 });

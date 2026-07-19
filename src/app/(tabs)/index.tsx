@@ -11,6 +11,7 @@ import { ErrorState } from "@/components/ui/ErrorState";
 import { LoadingIndicator } from "@/components/ui/LoadingIndicator";
 import { Spacing } from "@/constants/theme";
 import { useSearchFunds } from "@/hooks/use-search-funds";
+import { useTheme } from "@/hooks/use-theme";
 import { FundSearchResult } from "@/types/fund";
 
 export default function SearchScreen() {
@@ -18,6 +19,7 @@ export default function SearchScreen() {
   const { results, isLoading, isLoadingMore, error, hasMore, loadMore, retry } =
     useSearchFunds(query);
   const router = useRouter();
+  const theme = useTheme();
 
   const handleResultPress = useCallback(
     (item: FundSearchResult) => {
@@ -43,6 +45,9 @@ export default function SearchScreen() {
     return (
       <View style={styles.footer}>
         <ActivityIndicator size="small" color="#c9a96e" />
+        <ThemedText style={styles.footerText} themeColor="textSecondary">
+          Loading more...
+        </ThemedText>
       </View>
     );
   }, [isLoadingMore]);
@@ -52,6 +57,41 @@ export default function SearchScreen() {
       loadMore();
     }
   }, [hasMore, isLoadingMore, loadMore]);
+
+  const renderHeader = () => {
+    if (query.length >= 3) {
+      if (!isLoading && results.length > 0) {
+        return (
+          <View style={styles.resultHeader}>
+            <ThemedText style={styles.resultCount} themeColor="textSecondary">
+              {results.length} results found
+            </ThemedText>
+          </View>
+        );
+      }
+      return null;
+    }
+
+    return (
+      <View style={styles.sectionHeader}>
+        <View style={styles.sectionTitleRow}>
+          <ThemedText style={styles.sectionTitle} themeColor="textSecondary">
+            All Schemes
+          </ThemedText>
+          <View
+            style={[
+              styles.badge,
+              { backgroundColor: theme.backgroundSelected },
+            ]}
+          >
+            <ThemedText style={styles.badgeText} themeColor="textSecondary">
+              {results.length}+
+            </ThemedText>
+          </View>
+        </View>
+      </View>
+    );
+  };
 
   const renderContent = () => {
     if (isLoading && results.length === 0) {
@@ -80,6 +120,7 @@ export default function SearchScreen() {
         data={results}
         renderItem={renderItem}
         keyExtractor={keyExtractor}
+        ListHeaderComponent={renderHeader}
         contentContainerStyle={styles.listContent}
         keyboardDismissMode="on-drag"
         onEndReached={handleEndReached}
@@ -93,11 +134,6 @@ export default function SearchScreen() {
   return (
     <ThemedView style={styles.container}>
       <SearchInput value={query} onChangeText={setQuery} />
-      {query.length < 3 && results.length > 0 && (
-        <ThemedText style={styles.sectionTitle} themeColor="textSecondary">
-          All Schemes
-        </ThemedText>
-      )}
       {renderContent()}
     </ThemedView>
   );
@@ -107,19 +143,49 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
+  sectionHeader: {
+    paddingHorizontal: Spacing.four,
+    paddingTop: Spacing.two,
+    paddingBottom: Spacing.three,
+  },
+  sectionTitleRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: Spacing.two,
+  },
   sectionTitle: {
     fontSize: 13,
-    fontWeight: "600",
+    fontWeight: "700",
     textTransform: "uppercase",
-    letterSpacing: 1,
-    marginHorizontal: Spacing.five,
-    marginBottom: Spacing.three,
+    letterSpacing: 1.2,
+  },
+  badge: {
+    paddingHorizontal: Spacing.two,
+    paddingVertical: 2,
+    borderRadius: 10,
+  },
+  badgeText: {
+    fontSize: 11,
+    fontWeight: "700",
+  },
+  resultHeader: {
+    paddingHorizontal: Spacing.four,
+    paddingBottom: Spacing.three,
+  },
+  resultCount: {
+    fontSize: 13,
+    fontWeight: "600",
   },
   listContent: {
-    paddingBottom: Spacing.six,
+    paddingBottom: Spacing.eight,
   },
   footer: {
     paddingVertical: Spacing.five,
     alignItems: "center",
+    gap: Spacing.two,
+  },
+  footerText: {
+    fontSize: 12,
+    fontWeight: "500",
   },
 });

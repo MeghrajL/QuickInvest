@@ -1,18 +1,21 @@
 import { useRouter } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
-import { FlatList, StyleSheet } from "react-native";
+import { FlatList, StyleSheet, View } from "react-native";
 
+import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
 import { ConfirmModal } from "@/components/ui/ConfirmModal";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { LoadingIndicator } from "@/components/ui/LoadingIndicator";
 import { WatchlistItem } from "@/components/watchlist/WatchlistItem";
 import { Spacing } from "@/constants/theme";
+import { useTheme } from "@/hooks/use-theme";
 import { useWatchlistStore } from "@/stores/watchlist-store";
 import { WatchlistItem as WatchlistItemType } from "@/types/fund";
 
 export default function WatchlistScreen() {
   const router = useRouter();
+  const theme = useTheme();
   const { items, removeFromWatchlist, refreshNAVs } = useWatchlistStore();
   const [loading, setLoading] = useState(false);
   const [removeCode, setRemoveCode] = useState<number | null>(null);
@@ -67,6 +70,30 @@ export default function WatchlistScreen() {
     [],
   );
 
+  const renderHeader = useCallback(
+    () => (
+      <View style={styles.header}>
+        <View style={styles.headerRow}>
+          <ThemedText style={styles.headerTitle}>Your Watchlist</ThemedText>
+          <View
+            style={[
+              styles.countBadge,
+              { backgroundColor: theme.backgroundSelected },
+            ]}
+          >
+            <ThemedText style={styles.countText} themeColor="accent">
+              {items.length}
+            </ThemedText>
+          </View>
+        </View>
+        <ThemedText style={styles.headerSubtitle} themeColor="textSecondary">
+          Track your favourite schemes
+        </ThemedText>
+      </View>
+    ),
+    [items.length, theme.backgroundSelected],
+  );
+
   if (loading) {
     return <LoadingIndicator message="Refreshing watchlist..." />;
   }
@@ -85,6 +112,7 @@ export default function WatchlistScreen() {
       <FlatList
         data={items}
         keyExtractor={keyExtractor}
+        ListHeaderComponent={renderHeader}
         renderItem={({ item }) => (
           <WatchlistItem
             item={item}
@@ -93,6 +121,7 @@ export default function WatchlistScreen() {
           />
         )}
         contentContainerStyle={styles.listContent}
+        showsVerticalScrollIndicator={false}
       />
       <ConfirmModal
         visible={removeCode !== null}
@@ -110,7 +139,35 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
+  header: {
+    paddingHorizontal: Spacing.four,
+    paddingTop: Spacing.four,
+    paddingBottom: Spacing.four,
+  },
+  headerRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: Spacing.three,
+    marginBottom: Spacing.one,
+  },
+  headerTitle: {
+    fontSize: 22,
+    fontWeight: "800",
+  },
+  countBadge: {
+    paddingHorizontal: Spacing.three,
+    paddingVertical: Spacing.one,
+    borderRadius: 12,
+  },
+  countText: {
+    fontSize: 13,
+    fontWeight: "800",
+  },
+  headerSubtitle: {
+    fontSize: 13,
+    fontWeight: "500",
+  },
   listContent: {
-    paddingVertical: Spacing.two,
+    paddingBottom: Spacing.eight,
   },
 });

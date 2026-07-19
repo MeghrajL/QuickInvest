@@ -37,7 +37,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="index"
         options={{
-          title: "Explore",
+          title: "QuickInvest",
           tabBarLabel: "Explore",
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="search" size={size} color={color} />
@@ -47,7 +47,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="watchlist"
         options={{
-          title: "Watchlist",
+          headerShown: false,
           tabBarLabel: "Watchlist",
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="bookmark-outline" size={size} color={color} />
@@ -57,7 +57,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="holdings"
         options={{
-          title: "Holdings",
+          headerShown: false,
           tabBarLabel: "Holdings",
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="pie-chart-outline" size={size} color={color} />
