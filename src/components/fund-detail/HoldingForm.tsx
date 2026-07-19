@@ -1,3 +1,6 @@
+import DateTimePicker, {
+  DateTimePickerEvent,
+} from "@react-native-community/datetimepicker";
 import React, { useCallback, useState } from "react";
 import {
   Modal,
@@ -21,6 +24,13 @@ interface HoldingFormProps {
   onClose: () => void;
 }
 
+function formatDateDisplay(date: Date): string {
+  const year = date.getFullYear();
+  const month = (date.getMonth() + 1).toString().padStart(2, "0");
+  const day = date.getDate().toString().padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
 function HoldingFormInner({
   visible,
   fundName,
@@ -30,7 +40,9 @@ function HoldingFormInner({
 }: HoldingFormProps) {
   const theme = useTheme();
   const [units, setUnits] = useState("");
-  const [purchaseDate, setPurchaseDate] = useState("");
+  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
+  const [dateSelected, setDateSelected] = useState(false);
+  const [showDatePicker, setShowDatePicker] = useState(false);
   const [errors, setErrors] = useState<{
     units?: string;
     purchaseDate?: string;
@@ -38,7 +50,9 @@ function HoldingFormInner({
 
   const resetForm = useCallback(() => {
     setUnits("");
-    setPurchaseDate("");
+    setSelectedDate(new Date());
+    setDateSelected(false);
+    setShowDatePicker(false);
     setErrors({});
   }, []);
 
@@ -47,18 +61,32 @@ function HoldingFormInner({
     onClose();
   }, [resetForm, onClose]);
 
-  const handleSubmit = useCallback(() => {
-    const parsedDate = new Date(purchaseDate);
+  const handleDateChange = useCallback(
+    (event: DateTimePickerEvent, date?: Date) => {
+      if (Platform.OS === "android") {
+        setShowDatePicker(false);
+      }
+      if (event.type === "set" && date) {
+        setSelectedDate(date);
+        setDateSelected(true);
+        if (errors.purchaseDate) {
+          setErrors((prev) => ({ ...prev, purchaseDate: undefined }));
+        }
+      }
+    },
+    [errors.purchaseDate],
+  );
 
-    if (isNaN(parsedDate.getTime())) {
+  const handleSubmit = useCallback(() => {
+    if (!dateSelected) {
       setErrors((prev) => ({
         ...prev,
-        purchaseDate: "Please enter a valid date in YYYY-MM-DD format",
+        purchaseDate: "Please select a purchase date",
       }));
       return;
     }
 
-    const result = validateHoldingForm(units, parsedDate, earliestNAVDate);
+    const result = validateHoldingForm(units, selectedDate, earliestNAVDate);
 
     if (!result.isValid) {
       setErrors(result.errors);
@@ -66,12 +94,11 @@ function HoldingFormInner({
     }
 
     const parsedUnits = Number(units);
-    onSubmit(parsedUnits, purchaseDate);
+    onSubmit(parsedUnits, formatDateDisplay(selectedDate));
     resetForm();
-  }, [units, purchaseDate, earliestNAVDate, onSubmit, resetForm]);
+  }, [units, selectedDate, dateSelected, earliestNAVDate, onSubmit, resetForm]);
 
-  const isFormFilled =
-    units.trim().length > 0 && purchaseDate.trim().length > 0;
+  const isFormFilled = units.trim().length > 0 && dateSelected;
 
   return (
     <Modal
@@ -125,31 +152,76 @@ function HoldingFormInner({
             )}
           </View>
 
-          {/* Purchase Date Input */}
+          {/* Purchase Date Picker */}
           <View style={styles.fieldContainer}>
             <ThemedText style={styles.fieldLabel} themeColor="textSecondary">
               Purchase Date
             </ThemedText>
-            <TextInput
-              style={[
-                styles.input,
-                {
-                  backgroundColor: theme.backgroundSelected,
-                  color: theme.text,
-                  borderColor: errors.purchaseDate ? "#f87171" : "transparent",
-                },
-              ]}
-              placeholder="YYYY-MM-DD"
-              placeholderTextColor={theme.textSecondary}
-              value={purchaseDate}
-              onChangeText={(text) => {
-                setPurchaseDate(text);
-                if (errors.purchaseDate) {
-                  setErrors((prev) => ({ ...prev, purchaseDate: undefined }));
-                }
-              }}
-              accessibilityLabel="Purchase date"
-            />
+
+            {Platform.OS === "ios" ? (
+              // iOS: inline date picker
+              <View
+                style={[
+                  styles.datePickerContainer,
+                  {
+                    backgroundColor: theme.backgroundSelected,
+                    borderColor: errors.purchaseDate
+                      ? "#f87171"
+                      : "transparent",
+                  },
+                ]}
+              >
+                <DateTimePicker
+                  value={selectedDate}
+                  mode="date"
+                  display="compact"
+                  maximumDate={new Date()}
+                  minimumDate={earliestNAVDate}
+                  onChange={handleDateChange}
+                  themeVariant="dark"
+                  accentColor="#c9a96e"
+                />
+              </View>
+            ) : (
+              // Android: button that opens picker
+              <>
+                <Pressable
+                  onPress={() => setShowDatePicker(true)}
+                  style={[
+                    styles.input,
+                    styles.dateButton,
+                    {
+                      backgroundColor: theme.backgroundSelected,
+                      borderColor: errors.purchaseDate
+                        ? "#f87171"
+                        : "transparent",
+                    },
+                  ]}
+                >
+                  <ThemedText
+                    style={[
+                      styles.dateButtonText,
+                      !dateSelected && { color: theme.textSecondary },
+                    ]}
+                  >
+                    {dateSelected
+                      ? formatDateDisplay(selectedDate)
+                      : "Select date"}
+                  </ThemedText>
+                </Pressable>
+                {showDatePicker && (
+                  <DateTimePicker
+                    value={selectedDate}
+                    mode="date"
+                    display="default"
+                    maximumDate={new Date()}
+                    minimumDate={earliestNAVDate}
+                    onChange={handleDateChange}
+                  />
+                )}
+              </>
+            )}
+
             {errors.purchaseDate && (
               <ThemedText style={styles.errorText}>
                 {errors.purchaseDate}
@@ -242,6 +314,20 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "600",
     borderWidth: 1.5,
+  },
+  datePickerContainer: {
+    height: 50,
+    borderRadius: BorderRadius.md,
+    borderWidth: 1.5,
+    justifyContent: "center",
+    paddingHorizontal: Spacing.three,
+  },
+  dateButton: {
+    justifyContent: "center",
+  },
+  dateButtonText: {
+    fontSize: 16,
+    fontWeight: "600",
   },
   errorText: {
     color: "#f87171",

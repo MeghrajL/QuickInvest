@@ -6,11 +6,6 @@ import { HoldingRecord } from "../types/fund";
 import { findNearestTradingDay } from "../utils/date";
 import { computeCurrentValue, computeReturn } from "../utils/returns";
 
-/**
- * Generate a unique ID for holdings.
- * Uses a simple approach that works reliably in React Native
- * without native module dependencies.
- */
 function generateId(): string {
   return Date.now().toString(36) + Math.random().toString(36).slice(2);
 }
@@ -25,6 +20,53 @@ interface HoldingsStore {
   ) => void;
   removeHolding: (id: string) => void;
   refreshHoldings: () => Promise<void>;
+}
+
+/**
+ * Compute returns for a single holding given fund detail data.
+ */
+async function computeHoldingReturns(
+  holding: HoldingRecord,
+): Promise<HoldingRecord> {
+  try {
+    const detail = await getFundDetail(holding.schemeCode);
+    const latestEntry = detail.data[0];
+
+    if (!latestEntry) {
+      return holding;
+    }
+
+    const currentNAV = parseFloat(latestEntry.nav);
+    const purchaseDate = new Date(holding.purchaseDate);
+    const purchaseEntry = findNearestTradingDay(purchaseDate, detail.data);
+
+    if (!purchaseEntry) {
+      return {
+        ...holding,
+        currentNAV,
+        currentValue: computeCurrentValue(holding.units, currentNAV),
+      };
+    }
+
+    const purchaseNAV = parseFloat(purchaseEntry.nav);
+    const currentValue = computeCurrentValue(holding.units, currentNAV);
+    const { returnAmount, returnPercentage } = computeReturn(
+      holding.units,
+      currentNAV,
+      purchaseNAV,
+    );
+
+    return {
+      ...holding,
+      purchaseNAV,
+      currentNAV,
+      currentValue,
+      returnAmount,
+      returnPercentage,
+    };
+  } catch {
+    return holding;
+  }
 }
 
 export const useHoldingsStore = create<HoldingsStore>()(
@@ -47,7 +89,16 @@ export const useHoldingsStore = create<HoldingsStore>()(
           ...holding,
           id: generateId(),
         };
+        // Add immediately (shows "Returns unavailable" briefly)
         set({ holdings: [...holdings, newHolding] });
+
+        // Then compute returns async and update
+        computeHoldingReturns(newHolding).then((computed) => {
+          const { holdings: current } = get();
+          set({
+            holdings: current.map((h) => (h.id === computed.id ? computed : h)),
+          });
+        });
       },
 
       removeHolding: (id: string) => {
@@ -58,57 +109,7 @@ export const useHoldingsStore = create<HoldingsStore>()(
       refreshHoldings: async () => {
         const { holdings } = get();
         const updatedHoldings = await Promise.all(
-          holdings.map(async (holding) => {
-            try {
-              const detail = await getFundDetail(holding.schemeCode);
-              const latestEntry = detail.data[0];
-
-              if (!latestEntry) {
-                return holding;
-              }
-
-              const currentNAV = parseFloat(latestEntry.nav);
-
-              // Find purchase NAV using nearest preceding trading day
-              const purchaseDate = new Date(holding.purchaseDate);
-              const purchaseEntry = findNearestTradingDay(
-                purchaseDate,
-                detail.data,
-              );
-
-              if (!purchaseEntry) {
-                // Cannot compute returns if no NAV data for/before purchase date
-                return {
-                  ...holding,
-                  currentNAV,
-                  currentValue: computeCurrentValue(holding.units, currentNAV),
-                };
-              }
-
-              const purchaseNAV = parseFloat(purchaseEntry.nav);
-              const currentValue = computeCurrentValue(
-                holding.units,
-                currentNAV,
-              );
-              const { returnAmount, returnPercentage } = computeReturn(
-                holding.units,
-                currentNAV,
-                purchaseNAV,
-              );
-
-              return {
-                ...holding,
-                purchaseNAV,
-                currentNAV,
-                currentValue,
-                returnAmount,
-                returnPercentage,
-              };
-            } catch {
-              // If fetch fails, keep existing holding data unchanged
-              return holding;
-            }
-          }),
+          holdings.map(computeHoldingReturns),
         );
         set({ holdings: updatedHoldings });
       },

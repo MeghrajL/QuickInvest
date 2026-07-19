@@ -1,8 +1,9 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { FlatList, StyleSheet } from "react-native";
 
 import { HoldingItem } from "@/components/holdings/HoldingItem";
 import { ThemedView } from "@/components/themed-view";
+import { ConfirmModal } from "@/components/ui/ConfirmModal";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { LoadingIndicator } from "@/components/ui/LoadingIndicator";
 import { Spacing } from "@/constants/theme";
@@ -12,42 +13,51 @@ import { HoldingRecord } from "@/types/fund";
 export default function HoldingsScreen() {
   const { holdings, removeHolding, refreshHoldings } = useHoldingsStore();
   const [loading, setLoading] = useState(false);
+  const [removeId, setRemoveId] = useState<string | null>(null);
+  const hasRefreshed = useRef(false);
 
   useEffect(() => {
-    let mounted = true;
+    if (hasRefreshed.current) return;
+    if (holdings.length === 0) return;
+
+    const needsRefresh = holdings.some(
+      (h) => h.returnAmount == null && h.currentNAV == null,
+    );
+    if (!needsRefresh && hasRefreshed.current) return;
+
+    hasRefreshed.current = true;
 
     async function refresh() {
-      if (holdings.length === 0) return;
       setLoading(true);
       try {
         await refreshHoldings();
       } finally {
-        if (mounted) {
-          setLoading(false);
-        }
+        setLoading(false);
       }
     }
 
     refresh();
+  }, [holdings, refreshHoldings]);
 
-    return () => {
-      mounted = false;
-    };
-    // Only run on mount
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+  const handleRemove = useCallback((id: string) => {
+    setRemoveId(id);
   }, []);
 
-  const handleRemove = useCallback(
-    (id: string) => {
-      removeHolding(id);
-    },
-    [removeHolding],
-  );
+  const confirmRemove = useCallback(() => {
+    if (removeId) {
+      removeHolding(removeId);
+      setRemoveId(null);
+    }
+  }, [removeId, removeHolding]);
+
+  const cancelRemove = useCallback(() => {
+    setRemoveId(null);
+  }, []);
 
   const keyExtractor = useCallback((item: HoldingRecord) => item.id, []);
 
-  if (loading) {
-    return <LoadingIndicator message="Refreshing holdings..." />;
+  if (loading && holdings.every((h) => h.returnAmount == null)) {
+    return <LoadingIndicator message="Computing returns..." />;
   }
 
   if (holdings.length === 0) {
@@ -68,6 +78,14 @@ export default function HoldingsScreen() {
           <HoldingItem holding={item} onRemove={handleRemove} />
         )}
         contentContainerStyle={styles.listContent}
+      />
+      <ConfirmModal
+        visible={removeId !== null}
+        title="Remove Holding"
+        message="Are you sure you want to remove this holding? This action cannot be undone."
+        confirmLabel="Remove"
+        onConfirm={confirmRemove}
+        onCancel={cancelRemove}
       />
     </ThemedView>
   );

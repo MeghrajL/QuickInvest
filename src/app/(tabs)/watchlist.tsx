@@ -3,6 +3,7 @@ import { useCallback, useEffect, useState } from "react";
 import { FlatList, StyleSheet } from "react-native";
 
 import { ThemedView } from "@/components/themed-view";
+import { ConfirmModal } from "@/components/ui/ConfirmModal";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { LoadingIndicator } from "@/components/ui/LoadingIndicator";
 import { WatchlistItem } from "@/components/watchlist/WatchlistItem";
@@ -14,6 +15,7 @@ export default function WatchlistScreen() {
   const router = useRouter();
   const { items, removeFromWatchlist, refreshNAVs } = useWatchlistStore();
   const [loading, setLoading] = useState(false);
+  const [removeCode, setRemoveCode] = useState<number | null>(null);
 
   useEffect(() => {
     let mounted = true;
@@ -35,7 +37,6 @@ export default function WatchlistScreen() {
     return () => {
       mounted = false;
     };
-    // Only run on mount
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -46,12 +47,20 @@ export default function WatchlistScreen() {
     [router],
   );
 
-  const handleRemove = useCallback(
-    (schemeCode: number) => {
-      removeFromWatchlist(schemeCode);
-    },
-    [removeFromWatchlist],
-  );
+  const handleRemove = useCallback((schemeCode: number) => {
+    setRemoveCode(schemeCode);
+  }, []);
+
+  const confirmRemove = useCallback(() => {
+    if (removeCode !== null) {
+      removeFromWatchlist(removeCode);
+      setRemoveCode(null);
+    }
+  }, [removeCode, removeFromWatchlist]);
+
+  const cancelRemove = useCallback(() => {
+    setRemoveCode(null);
+  }, []);
 
   const keyExtractor = useCallback(
     (item: WatchlistItemType) => item.schemeCode.toString(),
@@ -84,6 +93,14 @@ export default function WatchlistScreen() {
           />
         )}
         contentContainerStyle={styles.listContent}
+      />
+      <ConfirmModal
+        visible={removeCode !== null}
+        title="Remove from Watchlist"
+        message="Are you sure you want to remove this fund from your watchlist?"
+        confirmLabel="Remove"
+        onConfirm={confirmRemove}
+        onCancel={cancelRemove}
       />
     </ThemedView>
   );

@@ -141,9 +141,9 @@ export default function FundDetailScreen() {
               styles.actionButton,
               {
                 backgroundColor: isInWatchlist
-                  ? theme.accent
+                  ? "transparent"
                   : theme.backgroundElement,
-                borderColor: isInWatchlist ? theme.accent : theme.border,
+                borderColor: isInWatchlist ? "#4ade80" : theme.border,
               },
               pressed && { opacity: 0.8 },
             ]}
@@ -155,7 +155,7 @@ export default function FundDetailScreen() {
             <ThemedText
               style={[
                 styles.actionButtonText,
-                isInWatchlist && { color: "#0d0d12" },
+                isInWatchlist && { color: "#4ade80" },
               ]}
             >
               {isInWatchlist ? "★ Watchlisted" : "☆ Watchlist"}
