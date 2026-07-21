@@ -138,10 +138,17 @@ function HoldingFormInner({
               placeholder="e.g. 100.5"
               placeholderTextColor={theme.textSecondary}
               keyboardType="numeric"
+              maxLength={10}
               value={units}
               onChangeText={(text) => {
                 setUnits(text);
-                if (errors.units) {
+                const parsed = Number(text);
+                if (!isNaN(parsed) && parsed > 10000000) {
+                  setErrors((prev) => ({
+                    ...prev,
+                    units: "Units cannot exceed 1,00,00,000",
+                  }));
+                } else if (errors.units) {
                   setErrors((prev) => ({ ...prev, units: undefined }));
                 }
               }}

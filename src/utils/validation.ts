@@ -27,14 +27,17 @@ export interface ValidationResult {
 export function validateHoldingForm(
   units: string,
   purchaseDate: Date,
-  earliestNAVDate?: Date
+  earliestNAVDate?: Date,
 ): ValidationResult {
   const errors: { units?: string; purchaseDate?: string } = {};
 
-  // Rule 1: units must be parseable as a positive number (> 0)
+  // Rule 1: units must be parseable as a positive number (> 0) and within limit
+  const MAX_UNITS = 10000000; // 1 crore
   const parsedUnits = Number(units);
   if (isNaN(parsedUnits) || parsedUnits <= 0) {
-    errors.units = 'Units must be a valid positive number';
+    errors.units = "Units must be a valid positive number";
+  } else if (parsedUnits > MAX_UNITS) {
+    errors.units = "Units cannot exceed 1,00,00,000";
   }
 
   // Rule 2: purchaseDate must not be in the future
@@ -44,7 +47,7 @@ export function validateHoldingForm(
   purchaseDateNormalized.setHours(0, 0, 0, 0);
 
   if (purchaseDateNormalized.getTime() > today.getTime()) {
-    errors.purchaseDate = 'Purchase date cannot be in the future';
+    errors.purchaseDate = "Purchase date cannot be in the future";
   }
 
   // Rule 3: If earliestNAVDate is provided, purchaseDate must be on or after it

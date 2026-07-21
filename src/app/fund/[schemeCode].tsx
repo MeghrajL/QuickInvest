@@ -32,7 +32,7 @@ export default function FundDetailScreen() {
 
   const { fund, isLoading, error, retry } = useFundDetail(schemeCode);
 
-  const [selectedRange, setSelectedRange] = useState<TimeRange>("1Y");
+  const [selectedRange, setSelectedRange] = useState<TimeRange>("ALL");
   const [holdingFormVisible, setHoldingFormVisible] = useState(false);
 
   const isInWatchlist = useWatchlistStore((s) => s.isInWatchlist(schemeCode));
