@@ -46,19 +46,25 @@ export default function FundDetailScreen() {
     if (isInWatchlist) {
       removeFromWatchlist(schemeCode);
     } else if (fund) {
-      addToWatchlist(schemeCode, fund.meta.scheme_name);
+      const latestEntry = fund.data[0];
+      const nav = latestEntry ? parseFloat(latestEntry.nav) : undefined;
+      const date = latestEntry ? latestEntry.date : undefined;
+      addToWatchlist(schemeCode, fund.meta.scheme_name, nav, date);
     }
   }, [isInWatchlist, schemeCode, fund, addToWatchlist, removeFromWatchlist]);
 
   const handleHoldingSubmit = useCallback(
     (units: number, purchaseDate: string) => {
       if (!fund) return;
-      addHolding({
-        schemeCode,
-        fundName: fund.meta.scheme_name,
-        units,
-        purchaseDate,
-      });
+      addHolding(
+        {
+          schemeCode,
+          fundName: fund.meta.scheme_name,
+          units,
+          purchaseDate,
+        },
+        fund.data,
+      );
       setHoldingFormVisible(false);
       setShowToast(true);
     },

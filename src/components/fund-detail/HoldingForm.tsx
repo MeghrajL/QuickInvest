@@ -1,6 +1,7 @@
 import DateTimePicker from "@react-native-community/datetimepicker";
 import React, { useCallback, useState } from "react";
 import {
+  KeyboardAvoidingView,
   Modal,
   Platform,
   Pressable,
@@ -60,9 +61,22 @@ function HoldingFormInner({
   }, [resetForm, onClose]);
 
   const handleDateChange = useCallback(
-    (_event: unknown, date: Date) => {
-      setSelectedDate(date);
+    (...args: any[]) => {
+      // Handle both (event, date) and (date) signatures across versions
+      let newDate: Date | undefined;
+      if (args[0] instanceof Date) {
+        newDate = args[0];
+      } else if (args[1] instanceof Date) {
+        newDate = args[1];
+      }
+
+      if (!newDate) return;
+
+      setSelectedDate(newDate);
       setDateSelected(true);
+      if (Platform.OS === "android") {
+        setShowDatePicker(false);
+      }
       if (errors.purchaseDate) {
         setErrors((prev) => ({ ...prev, purchaseDate: undefined }));
       }
@@ -106,98 +120,75 @@ function HoldingFormInner({
       animationType="slide"
       onRequestClose={handleClose}
     >
-      <Pressable style={styles.overlay} onPress={handleClose}>
-        <Pressable
-          style={[styles.card, { backgroundColor: theme.backgroundElement }]}
-          onPress={() => {}}
-        >
-          {/* Handle bar */}
-          <View style={styles.handleBar} />
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        style={styles.keyboardAvoid}
+      >
+        <Pressable style={styles.overlay} onPress={handleClose}>
+          <Pressable
+            style={[styles.card, { backgroundColor: theme.backgroundElement }]}
+            onPress={() => {}}
+          >
+            {/* Handle bar */}
+            <View style={styles.handleBar} />
 
-          <ThemedText style={styles.title}>Add Holding</ThemedText>
+            <ThemedText style={styles.title}>Add Holding</ThemedText>
 
-          <ThemedText style={styles.fundName} themeColor="textSecondary">
-            {fundName}
-          </ThemedText>
-
-          {/* Units Input */}
-          <View style={styles.fieldContainer}>
-            <ThemedText style={styles.fieldLabel} themeColor="textSecondary">
-              Units
-            </ThemedText>
-            <TextInput
-              style={[
-                styles.input,
-                {
-                  backgroundColor: theme.backgroundSelected,
-                  color: theme.text,
-                  borderColor: errors.units
-                    ? Colors.dark.negative
-                    : "transparent",
-                },
-              ]}
-              placeholder="e.g. 100.5"
-              placeholderTextColor={theme.textSecondary}
-              keyboardType="numeric"
-              maxLength={10}
-              value={units}
-              onChangeText={(text) => {
-                setUnits(text);
-                const parsed = Number(text);
-                if (!isNaN(parsed) && parsed > 10000000) {
-                  setErrors((prev) => ({
-                    ...prev,
-                    units: "Units cannot exceed 1,00,00,000",
-                  }));
-                } else if (errors.units) {
-                  setErrors((prev) => ({ ...prev, units: undefined }));
-                }
-              }}
-              accessibilityLabel="Number of units"
-            />
-            {errors.units && (
-              <ThemedText style={styles.errorText}>{errors.units}</ThemedText>
-            )}
-          </View>
-
-          {/* Purchase Date Picker */}
-          <View style={styles.fieldContainer}>
-            <ThemedText style={styles.fieldLabel} themeColor="textSecondary">
-              Purchase Date
+            <ThemedText style={styles.fundName} themeColor="textSecondary">
+              {fundName}
             </ThemedText>
 
-            {Platform.OS === "ios" ? (
-              // iOS: inline date picker
-              <View
+            {/* Units Input */}
+            <View style={styles.fieldContainer}>
+              <ThemedText style={styles.fieldLabel} themeColor="textSecondary">
+                Units
+              </ThemedText>
+              <TextInput
                 style={[
-                  styles.datePickerContainer,
+                  styles.input,
                   {
                     backgroundColor: theme.backgroundSelected,
-                    borderColor: errors.purchaseDate
+                    color: theme.text,
+                    borderColor: errors.units
                       ? Colors.dark.negative
                       : "transparent",
                   },
                 ]}
-              >
-                <DateTimePicker
-                  value={selectedDate}
-                  mode="date"
-                  display="compact"
-                  maximumDate={new Date()}
-                  minimumDate={earliestNAVDate}
-                  onValueChange={handleDateChange}
-                  themeVariant="dark"
-                  accentColor={Colors.dark.accent}
-                />
-              </View>
-            ) : (
-              // Android: button that opens picker
-              <>
-                <Pressable
-                  onPress={() => setShowDatePicker(true)}
+                placeholder="e.g. 100.5"
+                placeholderTextColor={theme.textSecondary}
+                keyboardType="numeric"
+                maxLength={10}
+                value={units}
+                onChangeText={(text) => {
+                  setUnits(text);
+                  const parsed = Number(text);
+                  if (!isNaN(parsed) && parsed > 10000000) {
+                    setErrors((prev) => ({
+                      ...prev,
+                      units: "Units cannot exceed 1,00,00,000",
+                    }));
+                  } else if (errors.units) {
+                    setErrors((prev) => ({ ...prev, units: undefined }));
+                  }
+                }}
+                accessibilityLabel="Number of units"
+              />
+              {errors.units && (
+                <ThemedText style={styles.errorText}>{errors.units}</ThemedText>
+              )}
+            </View>
+
+            {/* Purchase Date Picker */}
+            <View style={styles.fieldContainer}>
+              <ThemedText style={styles.fieldLabel} themeColor="textSecondary">
+                Purchase Date
+              </ThemedText>
+
+              {Platform.OS === "ios" ? (
+                // iOS: inline date picker
+                <View
                   style={[
-                    styles.input,
-                    styles.dateButton,
+                    styles.datePickerContainer,
                     {
                       backgroundColor: theme.backgroundSelected,
                       borderColor: errors.purchaseDate
@@ -206,76 +197,107 @@ function HoldingFormInner({
                     },
                   ]}
                 >
-                  <ThemedText
-                    style={[
-                      styles.dateButtonText,
-                      !dateSelected && { color: theme.textSecondary },
-                    ]}
-                  >
-                    {dateSelected
-                      ? formatDateDisplay(selectedDate)
-                      : "Select date"}
-                  </ThemedText>
-                </Pressable>
-                {showDatePicker && (
                   <DateTimePicker
                     value={selectedDate}
                     mode="date"
-                    display="default"
+                    display="compact"
                     maximumDate={new Date()}
                     minimumDate={earliestNAVDate}
-                    onValueChange={handleDateChange}
-                    onDismiss={handleDatePickerDismiss}
+                    onValueChange={handleDateChange as any}
+                    themeVariant="dark"
+                    accentColor={Colors.dark.accent}
                   />
-                )}
-              </>
-            )}
+                </View>
+              ) : (
+                // Android: button that opens picker
+                <>
+                  <Pressable
+                    onPress={() => setShowDatePicker(true)}
+                    style={[
+                      styles.input,
+                      styles.dateButton,
+                      {
+                        backgroundColor: theme.backgroundSelected,
+                        borderColor: errors.purchaseDate
+                          ? Colors.dark.negative
+                          : "transparent",
+                      },
+                    ]}
+                  >
+                    <ThemedText
+                      style={[
+                        styles.dateButtonText,
+                        !dateSelected && { color: theme.textSecondary },
+                      ]}
+                    >
+                      {dateSelected
+                        ? formatDateDisplay(selectedDate)
+                        : "Select date"}
+                    </ThemedText>
+                  </Pressable>
+                  {showDatePicker && (
+                    <DateTimePicker
+                      value={selectedDate}
+                      mode="date"
+                      display="default"
+                      maximumDate={new Date()}
+                      minimumDate={earliestNAVDate}
+                      onValueChange={handleDateChange as any}
+                      onDismiss={handleDatePickerDismiss}
+                    />
+                  )}
+                </>
+              )}
 
-            {errors.purchaseDate && (
-              <ThemedText style={styles.errorText}>
-                {errors.purchaseDate}
-              </ThemedText>
-            )}
-          </View>
+              {errors.purchaseDate && (
+                <ThemedText style={styles.errorText}>
+                  {errors.purchaseDate}
+                </ThemedText>
+              )}
+            </View>
 
-          {/* Buttons */}
-          <View style={styles.buttonRow}>
-            <Pressable
-              style={({ pressed }) => [
-                styles.button,
-                { backgroundColor: theme.backgroundSelected },
-                pressed && { opacity: 0.7 },
-              ]}
-              onPress={handleClose}
-              accessibilityRole="button"
-              accessibilityLabel="Cancel"
-            >
-              <ThemedText style={styles.cancelButtonText}>Cancel</ThemedText>
-            </Pressable>
+            {/* Buttons */}
+            <View style={styles.buttonRow}>
+              <Pressable
+                style={({ pressed }) => [
+                  styles.button,
+                  { backgroundColor: theme.backgroundSelected },
+                  pressed && { opacity: 0.7 },
+                ]}
+                onPress={handleClose}
+                accessibilityRole="button"
+                accessibilityLabel="Cancel"
+              >
+                <ThemedText style={styles.cancelButtonText}>Cancel</ThemedText>
+              </Pressable>
 
-            <Pressable
-              style={({ pressed }) => [
-                styles.button,
-                styles.submitButton,
-                { opacity: isFormFilled ? (pressed ? 0.8 : 1) : 0.4 },
-              ]}
-              onPress={handleSubmit}
-              disabled={!isFormFilled}
-              accessibilityRole="button"
-              accessibilityLabel="Submit holding"
-            >
-              <ThemedText style={styles.submitButtonText}>
-                Add Holding
-              </ThemedText>
-            </Pressable>
-          </View>
+              <Pressable
+                style={({ pressed }) => [
+                  styles.button,
+                  styles.submitButton,
+                  { opacity: isFormFilled ? (pressed ? 0.8 : 1) : 0.4 },
+                ]}
+                onPress={handleSubmit}
+                disabled={!isFormFilled}
+                accessibilityRole="button"
+                accessibilityLabel="Submit holding"
+              >
+                <ThemedText style={styles.submitButtonText}>
+                  Add Holding
+                </ThemedText>
+              </Pressable>
+            </View>
+          </Pressable>
         </Pressable>
-      </Pressable>
+      </KeyboardAvoidingView>
     </Modal>
   );
 }
 
 const styles = StyleSheet.create({
+  keyboardAvoid: {
+    flex: 1,
+  },
   overlay: {
     flex: 1,
     backgroundColor: Overlays.dark70,

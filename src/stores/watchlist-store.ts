@@ -1,12 +1,17 @@
-import { create } from 'zustand';
-import { persist, createJSONStorage } from 'zustand/middleware';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { WatchlistItem } from '../types/fund';
-import { getFundDetail } from '../services/mf-api';
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { create } from "zustand";
+import { createJSONStorage, persist } from "zustand/middleware";
+import { getLatestNAV } from "../services/mf-api";
+import { WatchlistItem } from "../types/fund";
 
 interface WatchlistStore {
   items: WatchlistItem[];
-  addToWatchlist: (schemeCode: number, schemeName: string) => void;
+  addToWatchlist: (
+    schemeCode: number,
+    schemeName: string,
+    latestNAV?: number,
+    lastUpdated?: string,
+  ) => void;
   removeFromWatchlist: (schemeCode: number) => void;
   isInWatchlist: (schemeCode: number) => boolean;
   refreshNAVs: () => Promise<void>;
@@ -17,13 +22,18 @@ export const useWatchlistStore = create<WatchlistStore>()(
     (set, get) => ({
       items: [],
 
-      addToWatchlist: (schemeCode: number, schemeName: string) => {
+      addToWatchlist: (
+        schemeCode: number,
+        schemeName: string,
+        latestNAV?: number,
+        lastUpdated?: string,
+      ) => {
         const { items } = get();
         if (items.some((item) => item.schemeCode === schemeCode)) {
           return;
         }
         set({
-          items: [...items, { schemeCode, schemeName }],
+          items: [...items, { schemeCode, schemeName, latestNAV, lastUpdated }],
         });
       },
 
@@ -44,7 +54,7 @@ export const useWatchlistStore = create<WatchlistStore>()(
         const updatedItems = await Promise.all(
           items.map(async (item) => {
             try {
-              const detail = await getFundDetail(item.schemeCode);
+              const detail = await getLatestNAV(item.schemeCode);
               const latestEntry = detail.data[0];
               if (latestEntry) {
                 return {
@@ -58,14 +68,14 @@ export const useWatchlistStore = create<WatchlistStore>()(
             } catch {
               return { ...item, isStale: true };
             }
-          })
+          }),
         );
         set({ items: updatedItems });
       },
     }),
     {
-      name: 'watchlist-storage',
+      name: "watchlist-storage",
       storage: createJSONStorage(() => AsyncStorage),
-    }
-  )
+    },
+  ),
 );

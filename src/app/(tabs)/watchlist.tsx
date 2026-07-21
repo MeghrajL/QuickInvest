@@ -26,7 +26,6 @@ export default function WatchlistScreen() {
 
     async function refresh() {
       if (items.length === 0) return;
-      setLoading(true);
       try {
         await refreshNAVs();
       } finally {
