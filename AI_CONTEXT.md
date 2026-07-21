@@ -25,21 +25,25 @@
 - **Splash screen stuck**: After removing the template's AnimatedSplashOverlay, `SplashScreen.hideAsync()` was never called. Added a `useEffect` to dismiss it on mount.
 - **NAV history performance**: FlatList inside ScrollView renders all items (no virtualization). Solved by showing only 50 entries on fund detail with a "View All" button navigating to a separate virtualized screen.
 - **Date picker**: Initially used text input for dates. Later integrated `@react-native-community/datetimepicker` for proper native date selection with min/max constraints.
+- **API call optimization**: Initially, adding a watchlist item or holding triggered extra API calls to fetch NAV data. Redesigned to pass the already-loaded fund data directly from the Fund Detail screen to the stores, eliminating unnecessary network requests. Watchlist items now store `latestNAV` at add time; holdings compute returns synchronously using `fund.data` already in memory.
+- **DateTimePicker API mismatch**: The `@react-native-community/datetimepicker` v9 deprecates `onChange` for `onValueChange`, but the actual runtime signature was ambiguous (sometimes `(event, date)`, sometimes `(date)`). Implemented a defensive handler using `(...args)` with `instanceof Date` checks on both argument positions.
 
 ## Key Architectural Decisions and Trade-offs
 
-| Decision               | Choice                           | Rationale                                                                                                                                        |
-| ---------------------- | -------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
-| State management       | Zustand v5 + persist             | Lightweight, TypeScript-native, built-in AsyncStorage integration. No boilerplate vs Redux.                                                      |
-| Data fetching          | Axios + React Query v5           | Axios for clean interceptors/logging. React Query for caching, retries, background refetch, request deduplication.                               |
-| Chart library          | react-native-gifted-charts       | Works in Expo managed workflow without native SVG deps. Good enough for financial line charts.                                                   |
-| NAV history pagination | Separate virtualized screen      | FlatList inside ScrollView can't virtualize. 50 entries on detail + full-screen FlatList for "View All" solves performance.                      |
-| Nearest trading day    | Binary search on descending data | O(log n) lookup handles non-trading days (weekends/holidays). Falls back to nearest preceding date.                                              |
-| Offline                | Zustand persist + AppState       | Persisted stores show cached data when offline. Foreground transition triggers refresh. No extra NetInfo dependency.                             |
-| Color system           | Centralized constants            | All colors in `constants/theme.ts` with `Colors`, `AvatarColors`, `Overlays` exports. No hardcoded hex strings in components.                    |
-| Formatting             | `toLocaleString('en-IN')`        | Indian numbering system (lakh/crore) without custom regex. All values to 2 decimal places.                                                       |
-| Form validation        | Real-time + on submit            | Max units validated while typing (instant feedback), date constraints enforced by native picker min/max + programmatic validation as safety net. |
-| Navigation             | Expo Router file-based           | Type-safe routes, clean URL structure, native stack animations. `[schemeCode].tsx` dynamic segments.                                             |
+| Decision                 | Choice                            | Rationale                                                                                                                                                         |
+| ------------------------ | --------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| State management         | Zustand v5 + persist              | Lightweight, TypeScript-native, built-in AsyncStorage integration. No boilerplate vs Redux.                                                                       |
+| Data fetching            | Axios + React Query v5            | Axios for clean interceptors/logging. React Query for caching, retries, background refetch, request deduplication.                                                |
+| Chart library            | react-native-gifted-charts        | Works in Expo managed workflow without native SVG deps. Good enough for financial line charts.                                                                    |
+| NAV history pagination   | Separate virtualized screen       | FlatList inside ScrollView can't virtualize. 50 entries on detail + full-screen FlatList for "View All" solves performance.                                       |
+| Nearest trading day      | Binary search on descending data  | O(log n) lookup handles non-trading days (weekends/holidays). Falls back to nearest preceding date.                                                               |
+| Offline                  | Zustand persist + AppState        | Persisted stores show cached data when offline. Foreground transition triggers refresh. No extra NetInfo dependency.                                              |
+| Color system             | Centralized constants             | All colors in `constants/theme.ts` with `Colors`, `AvatarColors`, `Overlays` exports. No hardcoded hex strings in components.                                     |
+| Formatting               | `toLocaleString('en-IN')`         | Indian numbering system (lakh/crore) without custom regex. All values to 2 decimal places.                                                                        |
+| Form validation          | Real-time + on submit             | Max units validated while typing (instant feedback), date constraints enforced by native picker min/max + programmatic validation as safety net.                  |
+| Navigation               | Expo Router file-based            | Type-safe routes, clean URL structure, native stack animations. `[schemeCode].tsx` dynamic segments.                                                              |
+| Data passing at add time | Pass fund.data directly to stores | Eliminates API calls when adding watchlist items or holdings. Data already loaded on Fund Detail screen — reuse it locally.                                       |
+| Refresh strategy         | Mount-only + AppState foreground  | Both watchlist and holdings refresh only on app launch and when app returns to foreground. No per-tab-switch API calls. Uses `/latest` endpoint for fast refresh. |
 
 ## Specific AI Correction Example
 

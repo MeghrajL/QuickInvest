@@ -69,12 +69,21 @@ Uses the free public API at [mfapi.in](https://www.mfapi.in) — no authenticati
 
 ```
 src/
-├── app/                    # Expo Router screens & layouts
-├── components/             # Reusable UI components
-├── hooks/                  # Custom React hooks
-├── services/               # API client (Axios) & React Query config
-├── stores/                 # Zustand state management
-├── types/                  # TypeScript interfaces
-├── utils/                  # Pure utility functions
-└── constants/              # Theme, colors, spacing
+├── app/
+│   ├── _layout.tsx              # Root Stack navigator + QueryClientProvider
+│   ├── (tabs)/                  # Tab navigator (Explore, Watchlist, Holdings)
+│   ├── fund/[schemeCode].tsx    # Fund Detail screen
+│   └── nav-history/[schemeCode].tsx  # Full NAV History screen (virtualized)
+├── components/
+│   ├── ui/                      # Shared: LoadingIndicator, ErrorState, EmptyState, ConfirmModal, SuccessToast
+│   ├── search/                  # SearchInput, SearchResultItem
+│   ├── fund-detail/             # NAVChart, TimeRangeFilter, NAVHistoryList, HoldingForm
+│   ├── watchlist/               # WatchlistItem
+│   └── holdings/                # HoldingItem
+├── hooks/                       # useSearchFunds, useFundDetail, useAppRefresh
+├── services/                    # Axios client, mfapi.in endpoints, React Query config
+├── stores/                      # Zustand: watchlist-store, holdings-store
+├── types/                       # TypeScript interfaces (fund.ts)
+├── utils/                       # format, date, returns, chart, validation
+└── constants/                   # Colors, AvatarColors, Overlays, Spacing, BorderRadius
 ```
