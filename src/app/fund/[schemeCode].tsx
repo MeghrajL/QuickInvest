@@ -1,6 +1,8 @@
-import { useLocalSearchParams } from "expo-router";
+import Ionicons from "@expo/vector-icons/Ionicons";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import { useCallback, useMemo, useState } from "react";
 import { Pressable, ScrollView, StyleSheet, View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 import { HoldingForm } from "@/components/fund-detail/HoldingForm";
 import { NAVChart } from "@/components/fund-detail/NAVChart";
@@ -26,6 +28,7 @@ export default function FundDetailScreen() {
   }>();
   const schemeCode = Number(schemeCodeParam);
   const theme = useTheme();
+  const router = useRouter();
 
   const { fund, isLoading, error, retry } = useFundDetail(schemeCode);
 
@@ -75,15 +78,35 @@ export default function FundDetailScreen() {
   }, [fund]);
 
   if (isLoading) {
-    return <LoadingIndicator message="Loading fund details..." />;
+    return (
+      <ThemedView style={styles.container}>
+        <SafeAreaView style={styles.safeArea}>
+          <LoadingIndicator message="Loading fund details..." />
+        </SafeAreaView>
+      </ThemedView>
+    );
   }
 
   if (error) {
-    return <ErrorState message={error} onRetry={retry} />;
+    return (
+      <ThemedView style={styles.container}>
+        <SafeAreaView style={styles.safeArea}>
+          <CustomHeader onBack={() => router.back()} theme={theme} />
+          <ErrorState message={error} onRetry={retry} />
+        </SafeAreaView>
+      </ThemedView>
+    );
   }
 
   if (!fund) {
-    return <ErrorState message="Fund data not available" onRetry={retry} />;
+    return (
+      <ThemedView style={styles.container}>
+        <SafeAreaView style={styles.safeArea}>
+          <CustomHeader onBack={() => router.back()} theme={theme} />
+          <ErrorState message="Fund data not available" onRetry={retry} />
+        </SafeAreaView>
+      </ThemedView>
+    );
   }
 
   const latestEntry = fund.data[0];
@@ -92,119 +115,165 @@ export default function FundDetailScreen() {
 
   return (
     <ThemedView style={styles.container}>
-      <ScrollView
-        contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
-      >
-        {/* Hero Card - Fund Info */}
-        <View
-          style={[
-            styles.heroCard,
-            { backgroundColor: theme.backgroundElement },
-          ]}
+      <SafeAreaView style={styles.safeArea}>
+        <ScrollView
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
         >
-          <ThemedText style={styles.fundCategory} themeColor="textSecondary">
-            {fund.meta.scheme_category || fund.meta.scheme_type}
-          </ThemedText>
-          <ThemedText style={styles.fundName}>
-            {fund.meta.scheme_name}
-          </ThemedText>
-          <ThemedText style={styles.fundHouse} themeColor="textSecondary">
-            {fund.meta.fund_house}
-          </ThemedText>
-
-          <View style={styles.navContainer}>
-            <View>
-              <ThemedText style={styles.navLabel} themeColor="textSecondary">
-                Latest NAV
-              </ThemedText>
-              <ThemedText style={styles.navValue}>
-                ₹{formatNAV(latestNAV)}
-              </ThemedText>
-            </View>
-            <View style={styles.navDateContainer}>
-              <ThemedText style={styles.navLabel} themeColor="textSecondary">
-                As on
-              </ThemedText>
-              <ThemedText style={styles.navDateValue}>
-                {formatDisplayDate(latestDate)}
-              </ThemedText>
-            </View>
+          {/* Custom Header */}
+          <View style={styles.headerBar}>
+            <Pressable
+              onPress={() => router.back()}
+              style={({ pressed }) => [
+                styles.backButton,
+                { backgroundColor: theme.backgroundElement },
+                pressed && { opacity: 0.7 },
+              ]}
+              accessibilityRole="button"
+              accessibilityLabel="Go back"
+            >
+              <Ionicons name="chevron-back" size={20} color={theme.text} />
+            </Pressable>
+            <ThemedText style={styles.headerTitle} numberOfLines={1}>
+              Fund Details
+            </ThemedText>
+            <View style={styles.headerSpacer} />
           </View>
-        </View>
 
-        {/* Action Buttons */}
-        <View style={styles.actionRow}>
-          <Pressable
-            onPress={handleWatchlistToggle}
-            style={({ pressed }) => [
-              styles.actionButton,
-              {
-                backgroundColor: isInWatchlist
-                  ? "transparent"
-                  : theme.backgroundElement,
-                borderColor: isInWatchlist ? "#4ade80" : theme.border,
-              },
-              pressed && { opacity: 0.8 },
+          {/* Hero Card - Fund Info */}
+          <View
+            style={[
+              styles.heroCard,
+              { backgroundColor: theme.backgroundElement },
             ]}
-            accessibilityRole="button"
-            accessibilityLabel={
-              isInWatchlist ? "Remove from watchlist" : "Add to watchlist"
-            }
           >
-            <ThemedText
+            {/* Category Badge */}
+            <View
               style={[
-                styles.actionButtonText,
-                isInWatchlist && { color: "#4ade80" },
+                styles.categoryBadge,
+                { backgroundColor: theme.backgroundSelected },
               ]}
             >
-              {isInWatchlist ? "★ Watchlisted" : "☆ Watchlist"}
-            </ThemedText>
-          </Pressable>
+              <ThemedText style={styles.categoryText} themeColor="accent">
+                {fund.meta.scheme_category || fund.meta.scheme_type}
+              </ThemedText>
+            </View>
 
-          <Pressable
-            onPress={() => setHoldingFormVisible(true)}
-            style={({ pressed }) => [
-              styles.actionButton,
-              styles.addHoldingButton,
-              pressed && { opacity: 0.8 },
-            ]}
-            accessibilityRole="button"
-            accessibilityLabel="Add holding"
-          >
-            <ThemedText style={styles.addHoldingButtonText}>
-              + Add Holding
+            <ThemedText style={styles.fundName}>
+              {fund.meta.scheme_name}
             </ThemedText>
-          </Pressable>
-        </View>
 
-        {/* Chart Section */}
-        <View
-          style={[
-            styles.chartSection,
-            { backgroundColor: theme.backgroundElement },
-          ]}
-        >
-          <View style={styles.chartHeader}>
-            <ThemedText style={styles.sectionTitle}>Performance</ThemedText>
+            <View style={styles.fundHouseRow}>
+              <Ionicons
+                name="business-outline"
+                size={12}
+                color={theme.textSecondary}
+              />
+              <ThemedText style={styles.fundHouse} themeColor="textSecondary">
+                {fund.meta.fund_house}
+              </ThemedText>
+            </View>
+
+            {/* NAV Section */}
+            <View
+              style={[
+                styles.navCard,
+                { backgroundColor: theme.backgroundSelected },
+              ]}
+            >
+              <View style={styles.navMain}>
+                <ThemedText style={styles.navLabel} themeColor="textSecondary">
+                  LATEST NAV
+                </ThemedText>
+                <ThemedText style={styles.navValue}>
+                  ₹{formatNAV(latestNAV)}
+                </ThemedText>
+              </View>
+              <View style={styles.navDivider} />
+              <View style={styles.navDate}>
+                <ThemedText style={styles.navLabel} themeColor="textSecondary">
+                  AS ON
+                </ThemedText>
+                <ThemedText style={styles.navDateValue}>
+                  {formatDisplayDate(latestDate)}
+                </ThemedText>
+              </View>
+            </View>
           </View>
-          <TimeRangeFilter
-            selectedRange={selectedRange}
-            onRangeChange={setSelectedRange}
-          />
-          <NAVChart data={filteredData} maxPoints={100} />
-        </View>
 
-        {/* NAV History */}
-        <View
-          style={[
-            styles.historySection,
-            { backgroundColor: theme.backgroundElement },
-          ]}
-        >
-          <NAVHistoryList data={historyData} />
-        </View>
-      </ScrollView>
+          {/* Action Buttons */}
+          <View style={styles.actionRow}>
+            <Pressable
+              onPress={handleWatchlistToggle}
+              style={({ pressed }) => [
+                styles.actionButton,
+                {
+                  backgroundColor: isInWatchlist
+                    ? "transparent"
+                    : theme.backgroundElement,
+                  borderColor: isInWatchlist ? "#4ade80" : theme.border,
+                },
+                pressed && { opacity: 0.8 },
+              ]}
+              accessibilityRole="button"
+              accessibilityLabel={
+                isInWatchlist ? "Remove from watchlist" : "Add to watchlist"
+              }
+            >
+              <ThemedText
+                style={[
+                  styles.actionButtonText,
+                  isInWatchlist && { color: "#4ade80" },
+                ]}
+              >
+                {isInWatchlist ? "★ Watchlisted" : "☆ Watchlist"}
+              </ThemedText>
+            </Pressable>
+
+            <Pressable
+              onPress={() => setHoldingFormVisible(true)}
+              style={({ pressed }) => [
+                styles.actionButton,
+                styles.addHoldingButton,
+                pressed && { opacity: 0.8 },
+              ]}
+              accessibilityRole="button"
+              accessibilityLabel="Add holding"
+            >
+              <ThemedText style={styles.addHoldingButtonText}>
+                + Add Holding
+              </ThemedText>
+            </Pressable>
+          </View>
+
+          {/* Chart Section */}
+          <View
+            style={[
+              styles.chartSection,
+              { backgroundColor: theme.backgroundElement },
+            ]}
+          >
+            <View style={styles.chartHeader}>
+              <ThemedText style={styles.sectionTitle}>Performance</ThemedText>
+            </View>
+            <TimeRangeFilter
+              selectedRange={selectedRange}
+              onRangeChange={setSelectedRange}
+            />
+            <NAVChart data={filteredData} maxPoints={100} />
+          </View>
+
+          {/* NAV History */}
+          <View
+            style={[
+              styles.historySection,
+              { backgroundColor: theme.backgroundElement },
+            ]}
+          >
+            <NAVHistoryList data={historyData} />
+          </View>
+        </ScrollView>
+      </SafeAreaView>
 
       {/* Holding Form Modal */}
       <HoldingForm
@@ -218,25 +287,79 @@ export default function FundDetailScreen() {
   );
 }
 
+/** Custom back button header */
+function CustomHeader({ onBack, theme }: { onBack: () => void; theme: any }) {
+  return (
+    <View style={styles.headerBar}>
+      <Pressable
+        onPress={onBack}
+        style={({ pressed }) => [
+          styles.backButton,
+          { backgroundColor: theme.backgroundElement },
+          pressed && { opacity: 0.7 },
+        ]}
+        accessibilityRole="button"
+        accessibilityLabel="Go back"
+      >
+        <Ionicons name="chevron-back" size={20} color={theme.text} />
+      </Pressable>
+      <ThemedText style={styles.headerTitle}>Fund Details</ThemedText>
+      <View style={styles.headerSpacer} />
+    </View>
+  );
+}
+
 const styles = StyleSheet.create({
   container: {
+    flex: 1,
+  },
+  safeArea: {
     flex: 1,
   },
   scrollContent: {
     paddingBottom: Spacing.eight,
   },
+  // Custom Header
+  headerBar: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: Spacing.four,
+    paddingVertical: Spacing.three,
+  },
+  backButton: {
+    width: 36,
+    height: 36,
+    borderRadius: BorderRadius.full,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  headerTitle: {
+    flex: 1,
+    fontSize: 16,
+    fontWeight: "700",
+    textAlign: "center",
+  },
+  headerSpacer: {
+    width: 36,
+  },
+  // Hero Card
   heroCard: {
     marginHorizontal: Spacing.four,
-    marginTop: Spacing.four,
     padding: Spacing.five,
     borderRadius: BorderRadius.xl,
   },
-  fundCategory: {
-    fontSize: 12,
-    fontWeight: "600",
+  categoryBadge: {
+    alignSelf: "flex-start",
+    paddingHorizontal: Spacing.three,
+    paddingVertical: Spacing.one,
+    borderRadius: BorderRadius.full,
+    marginBottom: Spacing.three,
+  },
+  categoryText: {
+    fontSize: 11,
+    fontWeight: "700",
     textTransform: "uppercase",
-    letterSpacing: 1,
-    marginBottom: Spacing.two,
+    letterSpacing: 0.5,
   },
   fundName: {
     fontSize: 18,
@@ -244,34 +367,52 @@ const styles = StyleSheet.create({
     lineHeight: 24,
     marginBottom: Spacing.two,
   },
-  fundHouse: {
-    fontSize: 13,
-    marginBottom: Spacing.five,
-  },
-  navContainer: {
+  fundHouseRow: {
     flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "flex-end",
+    alignItems: "center",
+    gap: Spacing.two,
+    marginBottom: Spacing.four,
+  },
+  fundHouse: {
+    fontSize: 12,
+    fontWeight: "500",
+  },
+  // NAV Card (nested inside hero)
+  navCard: {
+    flexDirection: "row",
+    borderRadius: BorderRadius.md,
+    padding: Spacing.four,
+    alignItems: "center",
+  },
+  navMain: {
+    flex: 1,
+    gap: Spacing.one,
   },
   navLabel: {
-    fontSize: 11,
-    fontWeight: "600",
-    textTransform: "uppercase",
-    letterSpacing: 0.5,
-    marginBottom: Spacing.one,
+    fontSize: 10,
+    fontWeight: "700",
+    letterSpacing: 1,
   },
   navValue: {
-    fontSize: 28,
+    fontSize: 26,
     fontWeight: "800",
     color: "#c9a96e",
   },
-  navDateContainer: {
+  navDivider: {
+    width: 1,
+    height: 36,
+    backgroundColor: "rgba(255,255,255,0.1)",
+    marginHorizontal: Spacing.four,
+  },
+  navDate: {
+    gap: Spacing.one,
     alignItems: "flex-end",
   },
   navDateValue: {
     fontSize: 14,
-    fontWeight: "600",
+    fontWeight: "700",
   },
+  // Action Buttons
   actionRow: {
     flexDirection: "row",
     paddingHorizontal: Spacing.four,
@@ -299,6 +440,7 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     color: "#0d0d12",
   },
+  // Chart Section
   chartSection: {
     marginHorizontal: Spacing.four,
     borderRadius: BorderRadius.xl,
@@ -314,6 +456,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "700",
   },
+  // History Section
   historySection: {
     marginHorizontal: Spacing.four,
     borderRadius: BorderRadius.xl,

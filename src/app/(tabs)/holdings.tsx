@@ -1,6 +1,7 @@
 import { useRouter } from "expo-router";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { FlatList, StyleSheet, View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 import { HoldingItem } from "@/components/holdings/HoldingItem";
 import { ThemedText } from "@/components/themed-text";
@@ -52,7 +53,6 @@ export default function HoldingsScreen() {
     refresh();
   }, [holdings, refreshHoldings]);
 
-  // Compute portfolio summary
   const summary = useMemo(() => {
     let totalValue = 0;
     let totalReturn = 0;
@@ -148,34 +148,46 @@ export default function HoldingsScreen() {
   }, [holdings, summary, theme]);
 
   if (loading && holdings.every((h) => h.returnAmount == null)) {
-    return <LoadingIndicator message="Computing returns..." />;
+    return (
+      <ThemedView style={styles.container}>
+        <SafeAreaView style={styles.safeArea} edges={["top"]}>
+          <LoadingIndicator message="Computing returns..." />
+        </SafeAreaView>
+      </ThemedView>
+    );
   }
 
   if (holdings.length === 0) {
     return (
-      <EmptyState
-        message="No holdings recorded"
-        suggestion="Open a fund and tap 'Add Holding' to track your investments"
-      />
+      <ThemedView style={styles.container}>
+        <SafeAreaView style={styles.safeArea} edges={["top"]}>
+          <EmptyState
+            message="No holdings recorded"
+            suggestion="Open a fund and tap 'Add Holding' to track your investments"
+          />
+        </SafeAreaView>
+      </ThemedView>
     );
   }
 
   return (
     <ThemedView style={styles.container}>
-      <FlatList
-        data={holdings}
-        keyExtractor={keyExtractor}
-        ListHeaderComponent={renderHeader}
-        renderItem={({ item }) => (
-          <HoldingItem
-            holding={item}
-            onPress={handlePress}
-            onRemove={handleRemove}
-          />
-        )}
-        contentContainerStyle={styles.listContent}
-        showsVerticalScrollIndicator={false}
-      />
+      <SafeAreaView style={styles.safeArea} edges={["top"]}>
+        <FlatList
+          data={holdings}
+          keyExtractor={keyExtractor}
+          ListHeaderComponent={renderHeader}
+          renderItem={({ item }) => (
+            <HoldingItem
+              holding={item}
+              onPress={handlePress}
+              onRemove={handleRemove}
+            />
+          )}
+          contentContainerStyle={styles.listContent}
+          showsVerticalScrollIndicator={false}
+        />
+      </SafeAreaView>
       <ConfirmModal
         visible={removeId !== null}
         title="Remove Holding"
@@ -190,6 +202,9 @@ export default function HoldingsScreen() {
 
 const styles = StyleSheet.create({
   container: {
+    flex: 1,
+  },
+  safeArea: {
     flex: 1,
   },
   header: {

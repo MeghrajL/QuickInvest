@@ -1,6 +1,7 @@
 import { useRouter } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
 import { FlatList, StyleSheet, View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
@@ -95,34 +96,46 @@ export default function WatchlistScreen() {
   );
 
   if (loading) {
-    return <LoadingIndicator message="Refreshing watchlist..." />;
+    return (
+      <ThemedView style={styles.container}>
+        <SafeAreaView style={styles.safeArea} edges={["top"]}>
+          <LoadingIndicator message="Refreshing watchlist..." />
+        </SafeAreaView>
+      </ThemedView>
+    );
   }
 
   if (items.length === 0) {
     return (
-      <EmptyState
-        message="Your watchlist is empty"
-        suggestion="Search for funds and add them to your watchlist"
-      />
+      <ThemedView style={styles.container}>
+        <SafeAreaView style={styles.safeArea} edges={["top"]}>
+          <EmptyState
+            message="Your watchlist is empty"
+            suggestion="Search for funds and add them to your watchlist"
+          />
+        </SafeAreaView>
+      </ThemedView>
     );
   }
 
   return (
     <ThemedView style={styles.container}>
-      <FlatList
-        data={items}
-        keyExtractor={keyExtractor}
-        ListHeaderComponent={renderHeader}
-        renderItem={({ item }) => (
-          <WatchlistItem
-            item={item}
-            onPress={handlePress}
-            onRemove={handleRemove}
-          />
-        )}
-        contentContainerStyle={styles.listContent}
-        showsVerticalScrollIndicator={false}
-      />
+      <SafeAreaView style={styles.safeArea} edges={["top"]}>
+        <FlatList
+          data={items}
+          keyExtractor={keyExtractor}
+          ListHeaderComponent={renderHeader}
+          renderItem={({ item }) => (
+            <WatchlistItem
+              item={item}
+              onPress={handlePress}
+              onRemove={handleRemove}
+            />
+          )}
+          contentContainerStyle={styles.listContent}
+          showsVerticalScrollIndicator={false}
+        />
+      </SafeAreaView>
       <ConfirmModal
         visible={removeCode !== null}
         title="Remove from Watchlist"
@@ -137,6 +150,9 @@ export default function WatchlistScreen() {
 
 const styles = StyleSheet.create({
   container: {
+    flex: 1,
+  },
+  safeArea: {
     flex: 1,
   },
   header: {

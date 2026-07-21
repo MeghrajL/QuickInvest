@@ -11,7 +11,6 @@ import { ErrorState } from "@/components/ui/ErrorState";
 import { LoadingIndicator } from "@/components/ui/LoadingIndicator";
 import { Spacing } from "@/constants/theme";
 import { useSearchFunds } from "@/hooks/use-search-funds";
-import { useTheme } from "@/hooks/use-theme";
 import { FundSearchResult } from "@/types/fund";
 
 export default function SearchScreen() {
@@ -19,7 +18,6 @@ export default function SearchScreen() {
   const { results, isLoading, isLoadingMore, error, hasMore, loadMore, retry } =
     useSearchFunds(query);
   const router = useRouter();
-  const theme = useTheme();
 
   const handleResultPress = useCallback(
     (item: FundSearchResult) => {
@@ -36,7 +34,7 @@ export default function SearchScreen() {
   );
 
   const keyExtractor = useCallback(
-    (item: FundSearchResult) => item.schemeCode.toString(),
+    (item: FundSearchResult, index: number) => `${item.schemeCode}-${index}`,
     [],
   );
 
@@ -74,21 +72,9 @@ export default function SearchScreen() {
 
     return (
       <View style={styles.sectionHeader}>
-        <View style={styles.sectionTitleRow}>
-          <ThemedText style={styles.sectionTitle} themeColor="textSecondary">
-            All Schemes
-          </ThemedText>
-          <View
-            style={[
-              styles.badge,
-              { backgroundColor: theme.backgroundSelected },
-            ]}
-          >
-            <ThemedText style={styles.badgeText} themeColor="textSecondary">
-              {results.length}+
-            </ThemedText>
-          </View>
-        </View>
+        <ThemedText style={styles.sectionTitle} themeColor="textSecondary">
+          All Schemes
+        </ThemedText>
       </View>
     );
   };
@@ -148,25 +134,11 @@ const styles = StyleSheet.create({
     paddingTop: Spacing.two,
     paddingBottom: Spacing.three,
   },
-  sectionTitleRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: Spacing.two,
-  },
   sectionTitle: {
     fontSize: 13,
     fontWeight: "700",
     textTransform: "uppercase",
     letterSpacing: 1.2,
-  },
-  badge: {
-    paddingHorizontal: Spacing.two,
-    paddingVertical: 2,
-    borderRadius: 10,
-  },
-  badgeText: {
-    fontSize: 11,
-    fontWeight: "700",
   },
   resultHeader: {
     paddingHorizontal: Spacing.four,

@@ -1,5 +1,6 @@
 import { Stack, ThemeProvider } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
+import { StatusBar } from "expo-status-bar";
 import { useEffect } from "react";
 
 import { Colors } from "@/constants/theme";
@@ -35,6 +36,7 @@ export default function RootLayout() {
 
   return (
     <ThemeProvider value={CREDTheme}>
+      <StatusBar style="light" />
       <Stack
         screenOptions={{
           headerStyle: { backgroundColor: Colors.dark.background },
@@ -47,8 +49,7 @@ export default function RootLayout() {
         <Stack.Screen
           name="fund/[schemeCode]"
           options={{
-            title: "Fund Details",
-            headerBackTitle: "Back",
+            headerShown: false,
           }}
         />
       </Stack>

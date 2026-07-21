@@ -63,7 +63,10 @@ function NAVHistoryListInner({ data }: NAVHistoryListProps) {
     [borderColor, data.length],
   );
 
-  const keyExtractor = useCallback((item: NAVEntry) => item.date, []);
+  const keyExtractor = useCallback(
+    (item: NAVEntry, index: number) => `${item.date}-${index}`,
+    [],
+  );
 
   const getItemLayout = useCallback(
     (_data: ArrayLike<NAVEntry> | null | undefined, index: number) => ({
