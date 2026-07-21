@@ -1,6 +1,4 @@
-import DateTimePicker, {
-  DateTimePickerEvent,
-} from "@react-native-community/datetimepicker";
+import DateTimePicker from "@react-native-community/datetimepicker";
 import React, { useCallback, useState } from "react";
 import {
   Modal,
@@ -62,20 +60,21 @@ function HoldingFormInner({
   }, [resetForm, onClose]);
 
   const handleDateChange = useCallback(
-    (event: DateTimePickerEvent, date?: Date) => {
-      if (Platform.OS === "android") {
-        setShowDatePicker(false);
-      }
-      if (event.type === "set" && date) {
-        setSelectedDate(date);
-        setDateSelected(true);
-        if (errors.purchaseDate) {
-          setErrors((prev) => ({ ...prev, purchaseDate: undefined }));
-        }
+    (_event: unknown, date: Date) => {
+      setSelectedDate(date);
+      setDateSelected(true);
+      if (errors.purchaseDate) {
+        setErrors((prev) => ({ ...prev, purchaseDate: undefined }));
       }
     },
     [errors.purchaseDate],
   );
+
+  const handleDatePickerDismiss = useCallback(() => {
+    if (Platform.OS === "android") {
+      setShowDatePicker(false);
+    }
+  }, []);
 
   const handleSubmit = useCallback(() => {
     if (!dateSelected) {
@@ -186,7 +185,7 @@ function HoldingFormInner({
                   display="compact"
                   maximumDate={new Date()}
                   minimumDate={earliestNAVDate}
-                  onChange={handleDateChange}
+                  onValueChange={handleDateChange}
                   themeVariant="dark"
                   accentColor={Colors.dark.accent}
                 />
@@ -225,7 +224,8 @@ function HoldingFormInner({
                     display="default"
                     maximumDate={new Date()}
                     minimumDate={earliestNAVDate}
-                    onChange={handleDateChange}
+                    onValueChange={handleDateChange}
+                    onDismiss={handleDatePickerDismiss}
                   />
                 )}
               </>

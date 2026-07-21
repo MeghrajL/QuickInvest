@@ -69,81 +69,69 @@ export function SuccessToast({
   if (!visible) return null;
 
   return (
-    <Animated.View
-      style={[
-        styles.container,
-        {
-          backgroundColor: theme.backgroundElement,
-          borderColor: Colors.dark.positive,
-          opacity,
-          transform: [{ translateY }],
-        },
-      ]}
-    >
-      <View style={styles.content}>
+    <View style={styles.wrapper} pointerEvents="box-none">
+      <Animated.View
+        style={[
+          styles.toast,
+          {
+            backgroundColor: theme.backgroundElement,
+            borderColor: Colors.dark.positive,
+            opacity,
+            transform: [{ translateY }],
+          },
+        ]}
+      >
         <ThemedText style={styles.icon}>✓</ThemedText>
         <ThemedText style={styles.message}>{message}</ThemedText>
-      </View>
-      {actionLabel && onAction && (
-        <Pressable
-          onPress={() => {
-            hideToast();
-            onAction();
-          }}
-          style={({ pressed }) => [
-            styles.actionButton,
-            pressed && { opacity: 0.7 },
-          ]}
-          hitSlop={8}
-        >
-          <ThemedText style={styles.actionText} themeColor="accent">
-            {actionLabel}
-          </ThemedText>
-        </Pressable>
-      )}
-    </Animated.View>
+        {actionLabel && onAction && (
+          <Pressable
+            onPress={() => {
+              hideToast();
+              onAction();
+            }}
+            style={({ pressed }) => [pressed && { opacity: 0.7 }]}
+            hitSlop={8}
+          >
+            <ThemedText style={styles.actionText} themeColor="accent">
+              {actionLabel}
+            </ThemedText>
+          </Pressable>
+        )}
+      </Animated.View>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  wrapper: {
     position: "absolute",
     bottom: 100,
-    left: Spacing.four,
-    right: Spacing.four,
-    borderRadius: BorderRadius.lg,
+    left: 0,
+    right: 0,
+    alignItems: "center",
+  },
+  toast: {
+    borderRadius: BorderRadius.full,
     borderWidth: 1,
     paddingVertical: Spacing.three,
-    paddingHorizontal: Spacing.four,
+    paddingHorizontal: Spacing.five,
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-between",
+    gap: Spacing.three,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 8,
     elevation: 8,
   },
-  content: {
-    flexDirection: "row",
-    alignItems: "center",
-    flex: 1,
-    gap: Spacing.three,
-  },
   icon: {
-    fontSize: 16,
+    fontSize: 14,
     color: Colors.dark.positive,
     fontWeight: "700",
   },
   message: {
     fontSize: 14,
     fontWeight: "600",
-    flex: 1,
-  },
-  actionButton: {
-    marginLeft: Spacing.three,
-    paddingVertical: Spacing.two,
-    paddingHorizontal: Spacing.three,
   },
   actionText: {
     fontSize: 13,

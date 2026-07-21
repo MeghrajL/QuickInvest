@@ -2,116 +2,64 @@
 
 ## AI Tools Used
 
-- **Kiro IDE** (AI-powered development environment) — Used for spec-driven development workflow (requirements → design → tasks → implementation)
-- Kiro's structured spec feature was used to formalize requirements, generate a design document with architecture diagrams, and break implementation into ordered tasks
-- Property-based testing with **fast-check** was integrated into the workflow to validate correctness properties defined in the design document
+- **Kiro IDE** — AI-powered development environment built on VS Code, used for the entire development workflow
+- Kiro's **spec-driven workflow** was used: Requirements → Design → Tasks → Implementation
+- Structured spec files guided development with formal requirements, design properties, and ordered implementation tasks
 
 ## Where AI Helped
 
-- **Spec generation**: Requirements document with 8 formal requirements and 49 acceptance criteria, covering search, fund details, watchlist, holdings, validation, formatting, navigation, and persistence
-- **Architecture design**: Data flow diagram, component structure, state management design, API layer design, and correctness properties
-- **Task breakdown**: 17 ordered implementation tasks with dependency tracking and requirement traceability
-- **Utility implementations**: Pure functions for formatting (INR, NAV, units, percentage), date handling (parseNAVDate, findNearestTradingDay), returns computation, chart downsampling, and form validation
-- **API layer**: Custom fetch wrapper (`src/services/api.ts`) with retry logic (exponential backoff), timeout via AbortController, and error type classification
-- **State management**: Zustand stores (`watchlist-store.ts`, `holdings-store.ts`) with AsyncStorage persistence middleware
-- **Custom hooks**: `useSearchFunds` (debounced search with cancellation), `useFundDetail` (fetch on mount with error handling), `useAppRefresh` (connectivity-aware refresh)
-- **Component scaffolding**: Shared UI components (LoadingIndicator, ErrorState, EmptyState), domain-specific components (NAVChart, HoldingForm, WatchlistItem, HoldingItem)
-- **Screen composition**: Search, Fund Detail, Watchlist, and Holdings screens wired with hooks, stores, and proper state handling
-- **Property-based tests**: 10 correctness properties validated with fast-check covering formatting, returns computation, date lookup, chart filtering, and form validation
+- **Architecture & spec**: Formalized 8 requirements with 49 acceptance criteria, designed component architecture, and generated an ordered task plan
+- **Core utilities**: Pure functions for INR formatting (Indian numbering), date parsing/nearest trading day lookup (binary search), returns computation, chart downsampling, and form validation
+- **API layer**: Axios instance with request/response interceptors for logging; React Query (TanStack Query v5) for data fetching with caching, retries, and stale-while-revalidate
+- **State management**: Zustand stores with AsyncStorage persist middleware for watchlist and holdings
+- **UI components**: CRED-inspired dark theme system, reusable components (LoadingIndicator, ErrorState, EmptyState, ConfirmModal, SuccessToast), and screen layouts
+- **Data hooks**: `useSearchFunds` (paginated + debounced search), `useFundDetail` (React Query), `useAppRefresh` (AppState-based background refresh)
+- **Chart implementation**: react-native-gifted-charts LineChart with dynamic y-axis scaling (yAxisOffset), adaptive x-axis date labels, downsampling, and area gradient fill
 
 ## What Required Manual Correction or Redesign
 
-- **UUID generation**: The initial suggestion used the `uuid` npm package, but this has known issues in React Native environments (requires native crypto polyfill). Replaced with a simpler `Date.now().toString(36) + Math.random().toString(36)` approach that's reliable across all platforms without native module linking.
-- **Expo SDK 57 compatibility**: The project uses SDK 57 which doesn't support Expo Go. Development builds were required instead, which affected the choice of dependencies (avoiding packages that need native linking beyond what Expo manages).
-- **NativeTabs → standard Tabs**: The original project template used `NativeTabs` from `expo-router/unstable-native-tabs`, which was replaced with the standard `Tabs` component from `expo-router` for stability and broader platform support.
-- **Date picker simplification**: Instead of a complex native date picker component (which would require `@react-native-community/datetimepicker` and additional native modules), a simple text input with YYYY-MM-DD format was used for the purchase date field in the holdings form.
-- **Swipe-to-delete simplification**: Simplified from gesture-based swipe-to-delete to a tap-to-remove button approach to avoid gesture handler configuration complexity within the assignment timeline.
-- **Chart library selection**: The AI initially considered `react-native-chart-kit` which depends on `react-native-svg` (native module). Switched to `react-native-gifted-charts` which works without additional native setup in the managed Expo workflow.
-- **Offline detection**: Opted against adding `@react-native-community/netinfo` as a separate dependency. Instead, used AppState listener for foreground transitions to trigger data refresh, and the API error handling naturally shows cached data when network is unavailable.
+- **Chart y-axis scaling**: AI's initial chart showed NAV data squished at the top because y-axis started from 0. Required computing min/max from data and using `yAxisOffset` prop to zoom into the actual data range.
+- **Chart x-axis labels**: Labels showed truncated ("2...") or only one label visible. Required multiple iterations to get proper `spacing` prop usage, label width allocation, and alignment strategies (left/center/right based on position).
+- **UUID in React Native**: The `uuid` package requires native crypto. Replaced with a simple `Date.now().toString(36) + Math.random().toString(36)` approach.
+- **Expo Go incompatibility**: SDK 57 doesn't support Expo Go. All development done via development builds.
+- **Splash screen stuck**: After removing the template's AnimatedSplashOverlay, `SplashScreen.hideAsync()` was never called. Added a `useEffect` to dismiss it on mount.
+- **NAV history performance**: FlatList inside ScrollView renders all items (no virtualization). Solved by showing only 50 entries on fund detail with a "View All" button navigating to a separate virtualized screen.
+- **Date picker**: Initially used text input for dates. Later integrated `@react-native-community/datetimepicker` for proper native date selection with min/max constraints.
 
 ## Key Architectural Decisions and Trade-offs
 
-| Decision | Choice | Rationale |
-|----------|--------|-----------|
-| State management | Zustand v5 with persist middleware | Lightweight, TypeScript-native, built-in AsyncStorage integration via persist middleware. No boilerplate compared to Redux. |
-| API approach | Custom fetch wrapper (`src/services/api.ts`) | Minimal dependency footprint, handles retries (2 max) and timeouts (10s) without React Query or SWR overhead. Good enough for this scope. |
-| Chart library | react-native-gifted-charts | No native dependencies required, works in managed Expo workflow, reasonable performance with downsampled data. |
-| Data downsampling | Uniform sampling (80-100 points) | NAV history can be thousands of entries. Downsampling to ~100 points keeps chart rendering fast while preserving visual trends. |
-| Nearest trading day | Binary search on sorted data | O(log n) lookup for finding purchase NAV on non-trading days. The API returns data in descending order which we reverse for binary search. |
-| Offline strategy | Persist middleware + AppState refresh | No extra native package (NetInfo) needed. Persisted stores show cached data when offline; foreground transitions trigger refresh attempts. |
-| Navigation | Expo Router file-based + Tabs | Follows Expo conventions, clean URL structure, type-safe route params via `[schemeCode].tsx`. |
-| Formatting | `toLocaleString('en-IN')` | Leverages built-in Intl support for Indian numbering system (lakh/crore grouping) without custom formatting implementations. |
-| Search debounce | Custom setTimeout in hook | 300ms debounce with cleanup on unmount. Simple, no external dependency, handles cancellation of stale requests. |
-| Testing | fast-check property-based tests | Validates correctness properties across random inputs rather than just example cases. 100+ iterations per property. |
+| Decision               | Choice                           | Rationale                                                                                                                                        |
+| ---------------------- | -------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
+| State management       | Zustand v5 + persist             | Lightweight, TypeScript-native, built-in AsyncStorage integration. No boilerplate vs Redux.                                                      |
+| Data fetching          | Axios + React Query v5           | Axios for clean interceptors/logging. React Query for caching, retries, background refetch, request deduplication.                               |
+| Chart library          | react-native-gifted-charts       | Works in Expo managed workflow without native SVG deps. Good enough for financial line charts.                                                   |
+| NAV history pagination | Separate virtualized screen      | FlatList inside ScrollView can't virtualize. 50 entries on detail + full-screen FlatList for "View All" solves performance.                      |
+| Nearest trading day    | Binary search on descending data | O(log n) lookup handles non-trading days (weekends/holidays). Falls back to nearest preceding date.                                              |
+| Offline                | Zustand persist + AppState       | Persisted stores show cached data when offline. Foreground transition triggers refresh. No extra NetInfo dependency.                             |
+| Color system           | Centralized constants            | All colors in `constants/theme.ts` with `Colors`, `AvatarColors`, `Overlays` exports. No hardcoded hex strings in components.                    |
+| Formatting             | `toLocaleString('en-IN')`        | Indian numbering system (lakh/crore) without custom regex. All values to 2 decimal places.                                                       |
+| Form validation        | Real-time + on submit            | Max units validated while typing (instant feedback), date constraints enforced by native picker min/max + programmatic validation as safety net. |
+| Navigation             | Expo Router file-based           | Type-safe routes, clean URL structure, native stack animations. `[schemeCode].tsx` dynamic segments.                                             |
 
 ## Specific AI Correction Example
 
-**Situation**: The AI initially suggested using `react-native-chart-kit` for the NAV history chart component in the Fund Detail screen.
+**Situation**: The AI set up the NAV chart to show data from 2006-2026 (range: ₹116 to ₹936). The chart rendered a thin line squished into the top 10% of the chart area, with the y-axis running 0-1000 and most of the chart being empty white space below the data.
 
-**Why I overrode it**: `react-native-chart-kit` depends on `react-native-svg` which requires native module linking. Since we're using Expo managed workflow (SDK 57) and the assignment emphasizes minimal native setup, this would have added build complexity. Additionally, `react-native-svg` can cause issues with certain Expo SDK versions.
+**Why it was wrong**: `react-native-gifted-charts` defaults to y-axis starting at 0. For mutual fund NAV data that never goes near 0, this wastes 90% of the chart height.
 
-**What I chose instead**: `react-native-gifted-charts` — a pure JavaScript charting solution that renders using React Native's built-in components. Combined with a uniform downsampling strategy (capping data at 100 points), the chart renders cleanly without native build issues.
+**My fix**: Computed `minNav` and `maxNav` from the actual data, then set `yAxisOffset = floor(min - 10% of range)` and `maxValue = ceil(max + 10% padding) - offset`. This makes the chart "zoom in" to the actual data range, using the full chart height for the line.
 
-**Outcome**: The chart renders NAV history smoothly with no native linking required. The downsampling approach (`src/utils/chart.ts`) ensures performance stays consistent regardless of how large the dataset is (some funds have 5000+ NAV entries).
+**Outcome**: The line now fills the entire 160px chart height, clearly showing the growth from ₹116 to ₹936 across 20 years. Y-axis labels show the actual NAV range (~100-~950) instead of 0-1000.
 
 ## What I Would Improve With More Time
 
-1. **React Query / TanStack Query** — Replace custom hooks with React Query for better caching, background refetching, request deduplication, and stale-while-revalidate patterns
-2. **Comprehensive error boundaries** — Add React error boundaries around each screen section to prevent full-screen crashes from rendering errors
-3. **Animated transitions** — Add layout animations (Reanimated) for adding/removing watchlist and holdings items
-4. **Native date picker** — Integrate `@react-native-community/datetimepicker` for better UX when selecting purchase dates
-5. **Pull-to-refresh** — Add `RefreshControl` to watchlist and holdings FlatLists for manual data refresh
-6. **Integration tests** — Screen-level tests using React Native Testing Library to verify full user flows
-7. **NAV change indicator** — Show day-over-day NAV change percentage in the watchlist for quick trend visibility
-8. **Search history** — Cache recent search queries in AsyncStorage for quick repeat access
-9. **Chart interactions** — Touch-to-inspect with tooltip showing exact NAV value and date at the touch point
-10. **Skeleton loading states** — Replace spinner loading indicators with skeleton screen patterns for perceived performance
-11. **Gesture-based deletion** — Proper swipe-to-delete with `react-native-gesture-handler` Swipeable component
-12. **Data export** — Allow users to export holdings data as CSV for portfolio tracking in external tools
-
-## Project Structure Reference
-
-```
-src/
-├── app/                          # Expo Router screens
-│   ├── _layout.tsx              # Root Stack navigator
-│   ├── (tabs)/                  # Tab navigator group
-│   │   ├── _layout.tsx          # Tab configuration (Search, Watchlist, Holdings)
-│   │   ├── index.tsx            # Search screen (default tab)
-│   │   ├── watchlist.tsx        # Watchlist screen
-│   │   └── holdings.tsx         # Holdings screen
-│   └── fund/
-│       └── [schemeCode].tsx     # Fund Detail screen (stack push)
-├── components/
-│   ├── ui/                      # Shared UI (LoadingIndicator, ErrorState, EmptyState)
-│   ├── search/                  # SearchInput, SearchResultItem
-│   ├── fund-detail/             # NAVChart, TimeRangeFilter, NAVHistoryList, HoldingForm
-│   ├── watchlist/               # WatchlistItem
-│   └── holdings/                # HoldingItem
-├── hooks/
-│   ├── use-search-funds.ts      # Debounced search hook
-│   ├── use-fund-detail.ts       # Fund detail fetching hook
-│   └── use-app-refresh.ts       # AppState-based refresh hook
-├── services/
-│   ├── api.ts                   # Fetch wrapper with retry + timeout
-│   └── mf-api.ts               # mfapi.in endpoint functions
-├── stores/
-│   ├── watchlist-store.ts       # Zustand + persist (AsyncStorage)
-│   └── holdings-store.ts        # Zustand + persist (AsyncStorage)
-├── types/
-│   └── fund.ts                  # All TypeScript interfaces
-└── utils/
-    ├── format.ts                # formatINR, formatNAV, formatUnits, formatPercentage, getReturnColor
-    ├── date.ts                  # parseNAVDate, formatDisplayDate, findNearestTradingDay
-    ├── returns.ts               # computeCurrentValue, computeReturn
-    ├── chart.ts                 # downsampleNAVData, filterByTimeRange
-    └── validation.ts            # validateHoldingForm
-```
-
-## API Reference
-
-- **Base URL**: `https://api.mfapi.in/mf`
-- **Search**: `GET /mf/search?q={query}` → `FundSearchResult[]`
-- **Fund Detail**: `GET /mf/{schemeCode}` → `FundDetail` (meta + NAV history)
-- **Rate limits**: None (public API), but we apply 10s timeout and 2 retries with backoff
-- **Data format**: NAV dates in `dd-MM-yyyy`, NAV values as strings (parsed to numbers client-side)
+1. **Skeleton loading screens** — Replace spinner indicators with shimmer/skeleton patterns for better perceived performance
+2. **Pull-to-refresh** — `RefreshControl` on watchlist and holdings for manual data refresh
+3. **Chart touch interaction** — Touch-to-inspect tooltip showing exact NAV and date at finger position
+4. **Error boundaries** — React error boundaries per section to prevent full-screen crashes
+5. **Unit tests** — Jest + React Native Testing Library for hooks, stores, and screen-level integration tests
+6. **Swipe-to-delete** — Gesture-based deletion using `react-native-gesture-handler` Swipeable
+7. **NAV change indicator** — Day-over-day percentage change badge on watchlist items
+8. **Search suggestions** — Recent searches stored in AsyncStorage for quick repeat access
+9. **Multiple holdings per fund** — Currently one holding per fund; support multiple buy entries with different dates
+10. **Haptic feedback** — Add haptics on button presses and successful actions for premium feel

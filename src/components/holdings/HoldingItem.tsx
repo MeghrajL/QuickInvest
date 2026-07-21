@@ -6,6 +6,7 @@ import { ThemedText } from "@/components/themed-text";
 import { AvatarColors, BorderRadius, Colors, Spacing } from "@/constants/theme";
 import { useTheme } from "@/hooks/use-theme";
 import { HoldingRecord } from "@/types/fund";
+import { formatDisplayDate } from "@/utils/date";
 import {
   formatINR,
   formatNAV,
@@ -87,7 +88,8 @@ export const HoldingItem = React.memo(function HoldingItem({
             {holding.fundName}
           </ThemedText>
           <ThemedText style={styles.units} themeColor="textSecondary">
-            {formatUnits(holding.units)} units
+            {formatUnits(holding.units)} units • Bought{" "}
+            {formatDisplayDate(new Date(holding.purchaseDate))}
           </ThemedText>
         </View>
         <Pressable
