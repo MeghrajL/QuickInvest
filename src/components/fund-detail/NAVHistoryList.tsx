@@ -1,8 +1,8 @@
 import React, { useCallback } from "react";
-import { FlatList, StyleSheet, View } from "react-native";
+import { FlatList, Pressable, StyleSheet, View } from "react-native";
 
 import { ThemedText } from "@/components/themed-text";
-import { Spacing } from "@/constants/theme";
+import { BorderRadius, Spacing } from "@/constants/theme";
 import { useTheme } from "@/hooks/use-theme";
 import { NAVEntry } from "@/types/fund";
 import { formatDisplayDate, parseNAVDate } from "@/utils/date";
@@ -10,6 +10,8 @@ import { formatNAV } from "@/utils/format";
 
 interface NAVHistoryListProps {
   data: NAVEntry[];
+  hasMore?: boolean;
+  onViewAll?: () => void;
 }
 
 const ROW_HEIGHT = 48;
@@ -48,7 +50,11 @@ const NAVRow = React.memo(function NAVRow({
   );
 });
 
-function NAVHistoryListInner({ data }: NAVHistoryListProps) {
+function NAVHistoryListInner({
+  data,
+  hasMore,
+  onViewAll,
+}: NAVHistoryListProps) {
   const theme = useTheme();
   const borderColor = theme.border;
 
@@ -57,10 +63,10 @@ function NAVHistoryListInner({ data }: NAVHistoryListProps) {
       <NAVRow
         entry={item}
         borderColor={borderColor}
-        isLast={index === data.length - 1}
+        isLast={!hasMore && index === data.length - 1}
       />
     ),
-    [borderColor, data.length],
+    [borderColor, data.length, hasMore],
   );
 
   const keyExtractor = useCallback(
@@ -79,7 +85,12 @@ function NAVHistoryListInner({ data }: NAVHistoryListProps) {
 
   return (
     <View style={styles.container}>
-      <ThemedText style={styles.sectionHeader}>NAV History</ThemedText>
+      <View style={styles.headerRow}>
+        <ThemedText style={styles.sectionHeader}>NAV History</ThemedText>
+        <ThemedText style={styles.countText} themeColor="textSecondary">
+          Showing {data.length}
+        </ThemedText>
+      </View>
       <FlatList
         data={data}
         renderItem={renderItem}
@@ -87,6 +98,22 @@ function NAVHistoryListInner({ data }: NAVHistoryListProps) {
         getItemLayout={getItemLayout}
         scrollEnabled={false}
       />
+      {hasMore && onViewAll && (
+        <Pressable
+          onPress={onViewAll}
+          style={({ pressed }) => [
+            styles.viewAllButton,
+            { backgroundColor: theme.backgroundSelected },
+            pressed && { opacity: 0.7 },
+          ]}
+          accessibilityRole="button"
+          accessibilityLabel="View all NAV history"
+        >
+          <ThemedText style={styles.viewAllText} themeColor="accent">
+            View All History →
+          </ThemedText>
+        </Pressable>
+      )}
     </View>
   );
 }
@@ -95,10 +122,19 @@ const styles = StyleSheet.create({
   container: {
     paddingHorizontal: Spacing.four,
   },
+  headerRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: Spacing.four,
+  },
   sectionHeader: {
     fontSize: 16,
     fontWeight: "700",
-    marginBottom: Spacing.four,
+  },
+  countText: {
+    fontSize: 12,
+    fontWeight: "500",
   },
   row: {
     flexDirection: "row",
@@ -112,6 +148,17 @@ const styles = StyleSheet.create({
     fontWeight: "500",
   },
   navText: {
+    fontSize: 14,
+    fontWeight: "700",
+  },
+  viewAllButton: {
+    marginTop: Spacing.four,
+    height: 44,
+    borderRadius: BorderRadius.full,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  viewAllText: {
     fontSize: 14,
     fontWeight: "700",
   },

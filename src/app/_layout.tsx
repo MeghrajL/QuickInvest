@@ -52,6 +52,10 @@ export default function RootLayout() {
             name="fund/[schemeCode]"
             options={{ headerShown: false }}
           />
+          <Stack.Screen
+            name="nav-history/[schemeCode]"
+            options={{ headerShown: false }}
+          />
         </Stack>
       </ThemeProvider>
     </QueryClientProvider>

@@ -71,6 +71,8 @@ export default function FundDetailScreen() {
     return filteredData.slice(0, 50);
   }, [filteredData]);
 
+  const hasMoreNav = filteredData.length > 50;
+
   const earliestNAVDate = useMemo(() => {
     if (!fund || fund.data.length === 0) return undefined;
     const lastEntry = fund.data[fund.data.length - 1];
@@ -270,7 +272,11 @@ export default function FundDetailScreen() {
               { backgroundColor: theme.backgroundElement },
             ]}
           >
-            <NAVHistoryList data={historyData} />
+            <NAVHistoryList
+              data={historyData}
+              hasMore={hasMoreNav}
+              onViewAll={() => router.push(`/nav-history/${schemeCode}`)}
+            />
           </View>
         </ScrollView>
       </SafeAreaView>
