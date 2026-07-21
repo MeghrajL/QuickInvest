@@ -2,7 +2,7 @@ import React, { useCallback } from "react";
 import { Pressable, StyleSheet, View } from "react-native";
 
 import { ThemedText } from "@/components/themed-text";
-import { BorderRadius, Spacing } from "@/constants/theme";
+import { AvatarColors, BorderRadius, Spacing } from "@/constants/theme";
 import { useTheme } from "@/hooks/use-theme";
 import { FundSearchResult } from "@/types/fund";
 
@@ -15,14 +15,7 @@ interface SearchResultItemProps {
  * Generates a consistent color based on the scheme name for the avatar.
  */
 function getAvatarColor(name: string): string {
-  const colors = [
-    "#c9a96e",
-    "#4ade80",
-    "#60a5fa",
-    "#f472b6",
-    "#a78bfa",
-    "#fb923c",
-  ];
+  const colors = AvatarColors;
   let hash = 0;
   for (let i = 0; i < name.length; i++) {
     hash = name.charCodeAt(i) + ((hash << 5) - hash);

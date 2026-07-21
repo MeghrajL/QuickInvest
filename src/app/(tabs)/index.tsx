@@ -9,7 +9,7 @@ import { ThemedView } from "@/components/themed-view";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { ErrorState } from "@/components/ui/ErrorState";
 import { LoadingIndicator } from "@/components/ui/LoadingIndicator";
-import { Spacing } from "@/constants/theme";
+import { Colors, Spacing } from "@/constants/theme";
 import { useSearchFunds } from "@/hooks/use-search-funds";
 import { FundSearchResult } from "@/types/fund";
 
@@ -42,7 +42,7 @@ export default function SearchScreen() {
     if (!isLoadingMore) return null;
     return (
       <View style={styles.footer}>
-        <ActivityIndicator size="small" color="#c9a96e" />
+        <ActivityIndicator size="small" color={Colors.dark.accent} />
         <ThemedText style={styles.footerText} themeColor="textSecondary">
           Loading more...
         </ThemedText>

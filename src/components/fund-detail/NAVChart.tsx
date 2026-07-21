@@ -2,7 +2,7 @@ import React, { useMemo } from "react";
 import { StyleSheet, useWindowDimensions, View } from "react-native";
 import { LineChart } from "react-native-gifted-charts";
 
-import { BorderRadius } from "@/constants/theme";
+import { BorderRadius, Colors, Overlays } from "@/constants/theme";
 import { NAVEntry } from "@/types/fund";
 import { downsampleNAVData } from "@/utils/chart";
 import { parseNAVDate } from "@/utils/date";
@@ -96,7 +96,7 @@ function NAVChartInner({ data, maxPoints = 20 }: NAVChartProps) {
         label,
         labelTextStyle: label
           ? {
-              color: "#8e8e9a",
+              color: Colors.dark.textSecondary,
               fontSize: 9,
               width: 50,
               textAlign,
@@ -124,15 +124,15 @@ function NAVChartInner({ data, maxPoints = 20 }: NAVChartProps) {
         data={chartData}
         height={CHART_HEIGHT}
         spacing={spacing}
-        color="#c9a96e"
+        color={Colors.dark.accent}
         thickness={2}
         hideDataPoints
-        startFillColor="rgba(201, 169, 110, 0.15)"
-        endFillColor="rgba(201, 169, 110, 0.01)"
+        startFillColor={Overlays.accentFill15}
+        endFillColor={Overlays.accentFill01}
         startOpacity={0.3}
         endOpacity={0}
         areaChart
-        yAxisTextStyle={{ color: "#8e8e9a", fontSize: 10 }}
+        yAxisTextStyle={{ color: Colors.dark.textSecondary, fontSize: 10 }}
         yAxisColor="transparent"
         xAxisColor="transparent"
         yAxisLabelWidth={Y_AXIS_WIDTH}

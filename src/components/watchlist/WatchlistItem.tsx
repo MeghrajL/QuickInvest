@@ -3,7 +3,7 @@ import React, { useCallback } from "react";
 import { Pressable, StyleSheet, View } from "react-native";
 
 import { ThemedText } from "@/components/themed-text";
-import { BorderRadius, Spacing } from "@/constants/theme";
+import { AvatarColors, BorderRadius, Colors, Spacing } from "@/constants/theme";
 import { useTheme } from "@/hooks/use-theme";
 import { WatchlistItem as WatchlistItemType } from "@/types/fund";
 import { formatDisplayDate, parseNAVDate } from "@/utils/date";
@@ -16,14 +16,7 @@ interface WatchlistItemProps {
 }
 
 function getAvatarColor(name: string): string {
-  const colors = [
-    "#c9a96e",
-    "#4ade80",
-    "#60a5fa",
-    "#f472b6",
-    "#a78bfa",
-    "#fb923c",
-  ];
+  const colors = AvatarColors;
   let hash = 0;
   for (let i = 0; i < name.length; i++) {
     hash = name.charCodeAt(i) + ((hash << 5) - hash);
@@ -118,7 +111,7 @@ export const WatchlistItem = React.memo(function WatchlistItem({
         accessibilityLabel={`Remove ${item.schemeName} from watchlist`}
         hitSlop={8}
       >
-        <Ionicons name="trash-outline" size={16} color="#f87171" />
+        <Ionicons name="trash-outline" size={16} color={Colors.dark.negative} />
       </Pressable>
     </Pressable>
   );
@@ -173,7 +166,7 @@ const styles = StyleSheet.create({
   navValue: {
     fontSize: 16,
     fontWeight: "800",
-    color: "#c9a96e",
+    color: Colors.dark.accent,
   },
   navDate: {
     fontSize: 11,

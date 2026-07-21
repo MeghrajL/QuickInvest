@@ -12,7 +12,8 @@ import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
 import { ErrorState } from "@/components/ui/ErrorState";
 import { LoadingIndicator } from "@/components/ui/LoadingIndicator";
-import { BorderRadius, Spacing } from "@/constants/theme";
+import { SuccessToast } from "@/components/ui/SuccessToast";
+import { BorderRadius, Colors, Overlays, Spacing } from "@/constants/theme";
 import { useFundDetail } from "@/hooks/use-fund-detail";
 import { useTheme } from "@/hooks/use-theme";
 import { useHoldingsStore } from "@/stores/holdings-store";
@@ -34,6 +35,7 @@ export default function FundDetailScreen() {
 
   const [selectedRange, setSelectedRange] = useState<TimeRange>("ALL");
   const [holdingFormVisible, setHoldingFormVisible] = useState(false);
+  const [showToast, setShowToast] = useState(false);
 
   const isInWatchlist = useWatchlistStore((s) => s.isInWatchlist(schemeCode));
   const addToWatchlist = useWatchlistStore((s) => s.addToWatchlist);
@@ -58,6 +60,7 @@ export default function FundDetailScreen() {
         purchaseDate,
       });
       setHoldingFormVisible(false);
+      setShowToast(true);
     },
     [schemeCode, fund, addHolding],
   );
@@ -213,7 +216,7 @@ export default function FundDetailScreen() {
                   backgroundColor: isInWatchlist
                     ? "transparent"
                     : theme.backgroundElement,
-                  borderColor: isInWatchlist ? "#4ade80" : theme.border,
+                  borderColor: isInWatchlist ? theme.positive : theme.border,
                 },
                 pressed && { opacity: 0.8 },
               ]}
@@ -225,7 +228,7 @@ export default function FundDetailScreen() {
               <ThemedText
                 style={[
                   styles.actionButtonText,
-                  isInWatchlist && { color: "#4ade80" },
+                  isInWatchlist && { color: theme.positive },
                 ]}
               >
                 {isInWatchlist ? "★ Watchlisted" : "☆ Watchlist"}
@@ -288,6 +291,12 @@ export default function FundDetailScreen() {
         earliestNAVDate={earliestNAVDate}
         onSubmit={handleHoldingSubmit}
         onClose={() => setHoldingFormVisible(false)}
+      />
+
+      <SuccessToast
+        visible={showToast}
+        message="Holding added successfully"
+        onDismiss={() => setShowToast(false)}
       />
     </ThemedView>
   );
@@ -402,12 +411,12 @@ const styles = StyleSheet.create({
   navValue: {
     fontSize: 26,
     fontWeight: "800",
-    color: "#c9a96e",
+    color: Colors.dark.accent,
   },
   navDivider: {
     width: 1,
     height: 36,
-    backgroundColor: "rgba(255,255,255,0.1)",
+    backgroundColor: Overlays.white10,
     marginHorizontal: Spacing.four,
   },
   navDate: {
@@ -438,13 +447,13 @@ const styles = StyleSheet.create({
     fontWeight: "700",
   },
   addHoldingButton: {
-    backgroundColor: "#c9a96e",
-    borderColor: "#c9a96e",
+    backgroundColor: Colors.dark.accent,
+    borderColor: Colors.dark.accent,
   },
   addHoldingButtonText: {
     fontSize: 13,
     fontWeight: "700",
-    color: "#0d0d12",
+    color: Colors.dark.background,
   },
   // Chart Section
   chartSection: {

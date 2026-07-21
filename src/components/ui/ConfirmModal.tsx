@@ -1,8 +1,7 @@
-import React from "react";
 import { Modal, Platform, Pressable, StyleSheet, View } from "react-native";
 
 import { ThemedText } from "@/components/themed-text";
-import { BorderRadius, Spacing } from "@/constants/theme";
+import { BorderRadius, Colors, Overlays, Spacing } from "@/constants/theme";
 import { useTheme } from "@/hooks/use-theme";
 
 interface ConfirmModalProps {
@@ -66,9 +65,7 @@ export function ConfirmModal({
               accessibilityRole="button"
               accessibilityLabel={confirmLabel}
             >
-              <ThemedText style={styles.confirmText}>
-                {confirmLabel}
-              </ThemedText>
+              <ThemedText style={styles.confirmText}>{confirmLabel}</ThemedText>
             </Pressable>
           </View>
         </View>
@@ -80,7 +77,7 @@ export function ConfirmModal({
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: "rgba(0, 0, 0, 0.75)",
+    backgroundColor: Overlays.dark75,
     justifyContent: "center",
     alignItems: "center",
     padding: Spacing.six,
@@ -129,11 +126,11 @@ const styles = StyleSheet.create({
     fontWeight: "700",
   },
   confirmButton: {
-    backgroundColor: "#f87171",
+    backgroundColor: Colors.dark.negative,
   },
   confirmText: {
     fontSize: 14,
     fontWeight: "700",
-    color: "#ffffff",
+    color: Colors.dark.text,
   },
 });

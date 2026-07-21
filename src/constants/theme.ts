@@ -32,6 +32,26 @@ export const Colors = {
 
 export type ThemeColor = keyof typeof Colors.light & keyof typeof Colors.dark;
 
+/** Avatar palette for fund initials */
+export const AvatarColors = [
+  Colors.dark.accent,
+  Colors.dark.positive,
+  "#60a5fa",
+  "#f472b6",
+  "#a78bfa",
+  "#fb923c",
+] as const;
+
+/** Overlay and transparency colors */
+export const Overlays = {
+  dark75: "rgba(0, 0, 0, 0.75)",
+  dark70: "rgba(0, 0, 0, 0.7)",
+  white20: "rgba(255,255,255,0.2)",
+  white10: "rgba(255,255,255,0.1)",
+  accentFill15: "rgba(201, 169, 110, 0.15)",
+  accentFill01: "rgba(201, 169, 110, 0.01)",
+} as const;
+
 export const Fonts = Platform.select({
   ios: {
     sans: "system-ui",

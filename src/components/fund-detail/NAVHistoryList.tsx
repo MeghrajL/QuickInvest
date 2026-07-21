@@ -2,7 +2,7 @@ import React, { useCallback } from "react";
 import { FlatList, Pressable, StyleSheet, View } from "react-native";
 
 import { ThemedText } from "@/components/themed-text";
-import { BorderRadius, Spacing } from "@/constants/theme";
+import { Spacing } from "@/constants/theme";
 import { useTheme } from "@/hooks/use-theme";
 import { NAVEntry } from "@/types/fund";
 import { formatDisplayDate, parseNAVDate } from "@/utils/date";
@@ -87,9 +87,13 @@ function NAVHistoryListInner({
     <View style={styles.container}>
       <View style={styles.headerRow}>
         <ThemedText style={styles.sectionHeader}>NAV History</ThemedText>
-        <ThemedText style={styles.countText} themeColor="textSecondary">
-          Showing {data.length}
-        </ThemedText>
+        {hasMore && onViewAll && (
+          <Pressable onPress={onViewAll} hitSlop={8}>
+            <ThemedText style={styles.viewAllLink} themeColor="accent">
+              View All →
+            </ThemedText>
+          </Pressable>
+        )}
       </View>
       <FlatList
         data={data}
@@ -98,22 +102,6 @@ function NAVHistoryListInner({
         getItemLayout={getItemLayout}
         scrollEnabled={false}
       />
-      {hasMore && onViewAll && (
-        <Pressable
-          onPress={onViewAll}
-          style={({ pressed }) => [
-            styles.viewAllButton,
-            { backgroundColor: theme.backgroundSelected },
-            pressed && { opacity: 0.7 },
-          ]}
-          accessibilityRole="button"
-          accessibilityLabel="View all NAV history"
-        >
-          <ThemedText style={styles.viewAllText} themeColor="accent">
-            View All History →
-          </ThemedText>
-        </Pressable>
-      )}
     </View>
   );
 }
@@ -132,9 +120,9 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "700",
   },
-  countText: {
-    fontSize: 12,
-    fontWeight: "500",
+  viewAllLink: {
+    fontSize: 13,
+    fontWeight: "700",
   },
   row: {
     flexDirection: "row",
@@ -148,17 +136,6 @@ const styles = StyleSheet.create({
     fontWeight: "500",
   },
   navText: {
-    fontSize: 14,
-    fontWeight: "700",
-  },
-  viewAllButton: {
-    marginTop: Spacing.four,
-    height: 44,
-    borderRadius: BorderRadius.full,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  viewAllText: {
     fontSize: 14,
     fontWeight: "700",
   },

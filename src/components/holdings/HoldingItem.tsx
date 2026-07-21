@@ -3,7 +3,7 @@ import React, { useCallback } from "react";
 import { Pressable, StyleSheet, View } from "react-native";
 
 import { ThemedText } from "@/components/themed-text";
-import { BorderRadius, Spacing } from "@/constants/theme";
+import { AvatarColors, BorderRadius, Colors, Spacing } from "@/constants/theme";
 import { useTheme } from "@/hooks/use-theme";
 import { HoldingRecord } from "@/types/fund";
 import {
@@ -21,14 +21,7 @@ interface HoldingItemProps {
 }
 
 function getAvatarColor(name: string): string {
-  const colors = [
-    "#c9a96e",
-    "#4ade80",
-    "#60a5fa",
-    "#f472b6",
-    "#a78bfa",
-    "#fb923c",
-  ];
+  const colors = AvatarColors;
   let hash = 0;
   for (let i = 0; i < name.length; i++) {
     hash = name.charCodeAt(i) + ((hash << 5) - hash);
@@ -108,7 +101,11 @@ export const HoldingItem = React.memo(function HoldingItem({
           accessibilityLabel={`Remove ${holding.fundName} from holdings`}
           hitSlop={8}
         >
-          <Ionicons name="trash-outline" size={14} color="#f87171" />
+          <Ionicons
+            name="trash-outline"
+            size={14}
+            color={Colors.dark.negative}
+          />
         </Pressable>
       </View>
 
@@ -249,7 +246,7 @@ const styles = StyleSheet.create({
   currentValue: {
     fontSize: 18,
     fontWeight: "800",
-    color: "#c9a96e",
+    color: Colors.dark.accent,
   },
   returnBadge: {
     paddingHorizontal: Spacing.three,

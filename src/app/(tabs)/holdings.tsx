@@ -9,7 +9,7 @@ import { ThemedView } from "@/components/themed-view";
 import { ConfirmModal } from "@/components/ui/ConfirmModal";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { LoadingIndicator } from "@/components/ui/LoadingIndicator";
-import { BorderRadius, Spacing } from "@/constants/theme";
+import { BorderRadius, Colors, Spacing } from "@/constants/theme";
 import { useTheme } from "@/hooks/use-theme";
 import { useHoldingsStore } from "@/stores/holdings-store";
 import { HoldingRecord } from "@/types/fund";
@@ -133,7 +133,10 @@ export default function HoldingsScreen() {
                 style={[
                   styles.summaryReturn,
                   {
-                    color: summary.totalReturn >= 0 ? "#4ade80" : "#f87171",
+                    color:
+                      summary.totalReturn >= 0
+                        ? Colors.dark.positive
+                        : Colors.dark.negative,
                   },
                 ]}
               >
@@ -253,7 +256,7 @@ const styles = StyleSheet.create({
   summaryValue: {
     fontSize: 20,
     fontWeight: "800",
-    color: "#c9a96e",
+    color: Colors.dark.accent,
   },
   summaryReturn: {
     fontSize: 18,

@@ -13,7 +13,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
 import { LoadingIndicator } from "@/components/ui/LoadingIndicator";
-import { BorderRadius, Spacing } from "@/constants/theme";
+import { BorderRadius, Colors, Spacing } from "@/constants/theme";
 import { useFundDetail } from "@/hooks/use-fund-detail";
 import { useTheme } from "@/hooks/use-theme";
 import { NAVEntry } from "@/types/fund";
@@ -59,12 +59,7 @@ export default function NAVHistoryScreen() {
       const formattedNAV = `₹${formatNAV(navValue)}`;
 
       return (
-        <View
-          style={[
-            styles.row,
-            { borderBottomColor: theme.border },
-          ]}
-        >
+        <View style={[styles.row, { borderBottomColor: theme.border }]}>
           <ThemedText style={styles.dateText} themeColor="textSecondary">
             {formattedDate}
           </ThemedText>
@@ -93,7 +88,7 @@ export default function NAVHistoryScreen() {
     if (!hasMore) return null;
     return (
       <View style={styles.footer}>
-        <ActivityIndicator size="small" color="#c9a96e" />
+        <ActivityIndicator size="small" color={Colors.dark.accent} />
         <ThemedText style={styles.footerText} themeColor="textSecondary">
           Loading more...
         </ThemedText>
@@ -136,7 +131,11 @@ export default function NAVHistoryScreen() {
 
         {/* Fund name */}
         {fund && (
-          <ThemedText style={styles.fundName} numberOfLines={1} themeColor="textSecondary">
+          <ThemedText
+            style={styles.fundName}
+            numberOfLines={1}
+            themeColor="textSecondary"
+          >
             {fund.meta.scheme_name}
           </ThemedText>
         )}
@@ -208,7 +207,7 @@ const styles = StyleSheet.create({
   navText: {
     fontSize: 14,
     fontWeight: "700",
-    color: "#ffffff",
+    color: Colors.dark.text,
   },
   listContent: {
     paddingBottom: Spacing.six,

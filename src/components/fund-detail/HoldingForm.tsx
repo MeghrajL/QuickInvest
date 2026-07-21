@@ -12,7 +12,7 @@ import {
 } from "react-native";
 
 import { ThemedText } from "@/components/themed-text";
-import { BorderRadius, Spacing } from "@/constants/theme";
+import { BorderRadius, Colors, Overlays, Spacing } from "@/constants/theme";
 import { useTheme } from "@/hooks/use-theme";
 import { validateHoldingForm } from "@/utils/validation";
 
@@ -132,7 +132,9 @@ function HoldingFormInner({
                 {
                   backgroundColor: theme.backgroundSelected,
                   color: theme.text,
-                  borderColor: errors.units ? "#f87171" : "transparent",
+                  borderColor: errors.units
+                    ? Colors.dark.negative
+                    : "transparent",
                 },
               ]}
               placeholder="e.g. 100.5"
@@ -173,7 +175,7 @@ function HoldingFormInner({
                   {
                     backgroundColor: theme.backgroundSelected,
                     borderColor: errors.purchaseDate
-                      ? "#f87171"
+                      ? Colors.dark.negative
                       : "transparent",
                   },
                 ]}
@@ -186,7 +188,7 @@ function HoldingFormInner({
                   minimumDate={earliestNAVDate}
                   onChange={handleDateChange}
                   themeVariant="dark"
-                  accentColor="#c9a96e"
+                  accentColor={Colors.dark.accent}
                 />
               </View>
             ) : (
@@ -200,7 +202,7 @@ function HoldingFormInner({
                     {
                       backgroundColor: theme.backgroundSelected,
                       borderColor: errors.purchaseDate
-                        ? "#f87171"
+                        ? Colors.dark.negative
                         : "transparent",
                     },
                   ]}
@@ -276,7 +278,7 @@ function HoldingFormInner({
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: "rgba(0, 0, 0, 0.7)",
+    backgroundColor: Overlays.dark70,
     justifyContent: "flex-end",
   },
   card: {
@@ -291,7 +293,7 @@ const styles = StyleSheet.create({
     width: 40,
     height: 4,
     borderRadius: 2,
-    backgroundColor: "rgba(255,255,255,0.2)",
+    backgroundColor: Overlays.white20,
     alignSelf: "center",
     marginBottom: Spacing.five,
   },
@@ -337,7 +339,7 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
   errorText: {
-    color: "#f87171",
+    color: Colors.dark.negative,
     fontSize: 12,
     fontWeight: "500",
     marginTop: Spacing.two,
@@ -359,12 +361,12 @@ const styles = StyleSheet.create({
     fontWeight: "700",
   },
   submitButton: {
-    backgroundColor: "#c9a96e",
+    backgroundColor: Colors.dark.accent,
   },
   submitButtonText: {
     fontSize: 15,
     fontWeight: "700",
-    color: "#0d0d12",
+    color: Colors.dark.background,
   },
 });
 
