@@ -1,3 +1,4 @@
+import { QueryClientProvider } from "@tanstack/react-query";
 import { Stack, ThemeProvider } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
@@ -5,10 +6,10 @@ import { useEffect } from "react";
 
 import { Colors } from "@/constants/theme";
 import { useAppRefresh } from "@/hooks/use-app-refresh";
+import { queryClient } from "@/services/query-client";
 
 SplashScreen.preventAutoHideAsync();
 
-// Force dark theme matching CRED aesthetic
 const CREDTheme = {
   dark: true,
   colors: {
@@ -35,24 +36,24 @@ export default function RootLayout() {
   }, []);
 
   return (
-    <ThemeProvider value={CREDTheme}>
-      <StatusBar style="light" />
-      <Stack
-        screenOptions={{
-          headerStyle: { backgroundColor: Colors.dark.background },
-          headerTintColor: Colors.dark.text,
-          headerTitleStyle: { fontWeight: "700", fontSize: 18 },
-          headerShadowVisible: false,
-        }}
-      >
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen
-          name="fund/[schemeCode]"
-          options={{
-            headerShown: false,
+    <QueryClientProvider client={queryClient}>
+      <ThemeProvider value={CREDTheme}>
+        <StatusBar style="light" />
+        <Stack
+          screenOptions={{
+            headerStyle: { backgroundColor: Colors.dark.background },
+            headerTintColor: Colors.dark.text,
+            headerTitleStyle: { fontWeight: "700", fontSize: 18 },
+            headerShadowVisible: false,
           }}
-        />
-      </Stack>
-    </ThemeProvider>
+        >
+          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+          <Stack.Screen
+            name="fund/[schemeCode]"
+            options={{ headerShown: false }}
+          />
+        </Stack>
+      </ThemeProvider>
+    </QueryClientProvider>
   );
 }

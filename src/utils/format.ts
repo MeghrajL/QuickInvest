@@ -10,7 +10,7 @@
  * Examples: ₹1,23,456.78, ₹1,000.00
  */
 export function formatINR(amount: number): string {
-  const formatted = amount.toLocaleString('en-IN', {
+  const formatted = amount.toLocaleString("en-IN", {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   });
@@ -18,15 +18,12 @@ export function formatINR(amount: number): string {
 }
 
 /**
- * Formats a NAV value with up to 4 decimal places, removing trailing zeros.
+ * Formats a NAV value with exactly 2 decimal places.
  *
- * Examples: "123.4567", "45.12", "100"
+ * Examples: "123.46", "45.12", "100.00"
  */
 export function formatNAV(nav: number): string {
-  // Use toFixed(4) then remove trailing zeros
-  const fixed = nav.toFixed(4);
-  // Remove trailing zeros after decimal point, and the decimal point if no decimals remain
-  return fixed.replace(/\.?0+$/, '');
+  return nav.toFixed(2);
 }
 
 /**
@@ -36,7 +33,7 @@ export function formatNAV(nav: number): string {
  */
 export function formatUnits(units: number): string {
   const fixed = units.toFixed(3);
-  return fixed.replace(/\.?0+$/, '');
+  return fixed.replace(/\.?0+$/, "");
 }
 
 /**
@@ -53,5 +50,5 @@ export function formatPercentage(pct: number): string {
  * Red (#e53935) for negative returns, green (#43a047) for zero or positive returns.
  */
 export function getReturnColor(returnValue: number): string {
-  return returnValue < 0 ? '#e53935' : '#43a047';
+  return returnValue < 0 ? "#e53935" : "#43a047";
 }

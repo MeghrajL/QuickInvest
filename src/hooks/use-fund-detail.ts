@@ -1,6 +1,6 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
-import { FundDetail } from '../types/fund';
-import { getFundDetail } from '../services/mf-api';
+import { useQuery } from "@tanstack/react-query";
+import { getFundDetail } from "../services/mf-api";
+import { FundDetail } from "../types/fund";
 
 interface UseFundDetailResult {
   fund: FundDetail | null;
@@ -10,48 +10,22 @@ interface UseFundDetailResult {
 }
 
 export function useFundDetail(schemeCode: number): UseFundDetailResult {
-  const [fund, setFund] = useState<FundDetail | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [retryCounter, setRetryCounter] = useState(0);
+  const { data, isLoading, error, refetch } = useQuery({
+    queryKey: ["fundDetail", schemeCode],
+    queryFn: () => getFundDetail(schemeCode),
+    enabled: !!schemeCode,
+  });
 
-  // Track whether the component is still mounted to avoid state updates after unmount
-  const cancelledRef = useRef(false);
-
-  useEffect(() => {
-    cancelledRef.current = false;
-
-    const fetchDetail = async () => {
-      setIsLoading(true);
-      setError(null);
-
-      try {
-        const data = await getFundDetail(schemeCode);
-
-        if (!cancelledRef.current) {
-          setFund(data);
-          setIsLoading(false);
-        }
-      } catch (err) {
-        if (!cancelledRef.current) {
-          const message =
-            err instanceof Error ? err.message : 'An unexpected error occurred';
-          setError(message);
-          setIsLoading(false);
-        }
-      }
-    };
-
-    fetchDetail();
-
-    return () => {
-      cancelledRef.current = true;
-    };
-  }, [schemeCode, retryCounter]);
-
-  const retry = useCallback(() => {
-    setRetryCounter((c) => c + 1);
-  }, []);
-
-  return { fund, isLoading, error, retry };
+  return {
+    fund: data ?? null,
+    isLoading,
+    error: error
+      ? error instanceof Error
+        ? error.message
+        : "An unexpected error occurred"
+      : null,
+    retry: () => {
+      refetch();
+    },
+  };
 }
